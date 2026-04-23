@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChemAxis — Chemical Data Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg-deep: #030912;
+  --bg-mid: #060f1e;
+  --bg-card: rgba(8, 18, 38, 0.7);
+  --accent-cyan: #00d4ff;
+  --accent-blue: #1a6dff;
+  --accent-mint: #00ffb3;
+  --metal-1: #8899bb;
+  --metal-2: #c5d3e8;
+  --text-primary: #e8f0ff;
+  --text-muted: #5a6f8f;
+  --border: rgba(0,212,255,0.12);
+  --glow-cyan: 0 0 40px rgba(0,212,255,0.25);
+  --glow-blue: 0 0 60px rgba(26,109,255,0.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; overflow-x: hidden; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── CUSTOM CURSOR ── */
+.cursor {
+  width: 12px; height: 12px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  position: fixed; top: 0; left: 0;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: transform 0.1s, width 0.25s, height 0.25s, background 0.25s;
+  mix-blend-mode: screen;
+}
+.cursor-ring {
+  width: 36px; height: 36px;
+  border: 1.5px solid rgba(0,212,255,0.5);
+  border-radius: 50%;
+  position: fixed; top: 0; left: 0;
+  pointer-events: none; z-index: 9998;
+  transform: translate(-50%,-50%);
+  transition: transform 0.18s ease, width 0.3s, height 0.3s;
+}
+body:has(a:hover) .cursor, body:has(button:hover) .cursor { width: 20px; height: 20px; background: var(--accent-mint); }
+body:has(a:hover) .cursor-ring, body:has(button:hover) .cursor-ring { width: 52px; height: 52px; border-color: rgba(0,255,179,0.4); }
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1; opacity: 0.4;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 20px 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(3,9,18,0.6);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.4s;
+}
+nav.scrolled {
+  padding: 14px 60px;
+  background: rgba(3,9,18,0.92);
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem; font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.logo span { color: var(--accent-cyan); }
+.nav-links { display: flex; gap: 36px; list-style: none; }
+.nav-links a {
+  font-size: 0.875rem; font-weight: 500;
+  color: var(--metal-1); text-decoration: none;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  transition: color 0.25s;
+  position: relative;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: -4px; left: 0;
+  width: 0; height: 1px; background: var(--accent-cyan);
+  transition: width 0.3s;
+}
+.nav-links a:hover { color: var(--accent-cyan); }
+.nav-links a:hover::after { width: 100%; }
+.nav-cta {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  border: none; border-radius: 6px;
+  color: #fff; font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem; font-weight: 500;
+  cursor: none; letter-spacing: 0.03em;
+  transition: transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 0 20px rgba(0,212,255,0.2);
+}
+.nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 30px rgba(0,212,255,0.4); }
+
+/* ── HERO ── */
+#hero {
+  position: relative; height: 100vh; min-height: 700px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+#hero-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  z-index: 0;
+}
+.hero-gradient {
+  position: absolute; inset: 0; z-index: 1;
+  background: radial-gradient(ellipse 80% 60% at 50% 60%, rgba(26,109,255,0.15) 0%, transparent 70%),
+              radial-gradient(ellipse 40% 40% at 80% 20%, rgba(0,212,255,0.1) 0%, transparent 60%),
+              linear-gradient(to bottom, transparent 60%, var(--bg-deep) 100%);
+}
+.hero-content {
+  position: relative; z-index: 2;
+  text-align: center; max-width: 900px; padding: 0 24px;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px;
+  background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.25);
+  border-radius: 100px; margin-bottom: 32px;
+  font-size: 0.8rem; font-weight: 500; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent-cyan);
+  opacity: 0; transform: translateY(20px);
+}
+.hero-badge::before {
+  content: ''; width: 6px; height: 6px;
+  background: var(--accent-cyan); border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-cyan);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 800; line-height: 1.05;
+  letter-spacing: -0.03em;
+  opacity: 0; transform: translateY(40px);
+}
+.hero-title .line { display: block; overflow: hidden; }
+.hero-title .gradient-text {
+  background: linear-gradient(135deg, #fff 30%, var(--accent-cyan) 70%, var(--accent-mint));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  margin-top: 24px; max-width: 560px; margin-left: auto; margin-right: auto;
+  font-size: 1.1rem; font-weight: 300; color: var(--metal-1);
+  line-height: 1.7; opacity: 0; transform: translateY(30px);
+}
+.hero-actions {
+  margin-top: 44px; display: flex; gap: 16px;
+  justify-content: center; flex-wrap: wrap;
+  opacity: 0; transform: translateY(30px);
+}
+.btn-primary {
+  padding: 16px 36px;
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 100%);
+  border: none; border-radius: 8px;
+  color: #fff; font-family: 'DM Sans', sans-serif;
+  font-size: 1rem; font-weight: 500;
+  cursor: none; letter-spacing: 0.02em;
+  position: relative; overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 0 30px rgba(0,212,255,0.3);
+}
+.btn-primary::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(0,212,255,0.5); }
+.btn-primary:hover::before { opacity: 1; }
+
+.btn-secondary {
+  padding: 16px 36px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: var(--text-primary); font-family: 'DM Sans', sans-serif;
+  font-size: 1rem; font-weight: 400;
+  cursor: none; letter-spacing: 0.02em;
+  transition: all 0.3s; backdrop-filter: blur(10px);
+}
+.btn-secondary:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0,212,255,0.05);
+}
+
+.hero-stats {
+  position: absolute; bottom: 60px; left: 0; right: 0;
+  display: flex; justify-content: center; gap: 60px; z-index: 2;
+  opacity: 0;
+}
+.hero-stat { text-align: center; }
+.hero-stat .num {
+  font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;
+  color: var(--accent-cyan); line-height: 1;
+}
+.hero-stat .label { font-size: 0.8rem; color: var(--metal-1); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ── SECTION COMMON ── */
+section { padding: 120px 60px; position: relative; overflow: hidden; }
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem; font-weight: 500;
+  color: var(--accent-cyan); letter-spacing: 0.15em;
+  text-transform: uppercase; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-label::before {
+  content: ''; width: 32px; height: 1px; background: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan);
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 800; line-height: 1.1;
+  letter-spacing: -0.02em; color: var(--text-primary);
+  max-width: 700px;
+}
+.section-title em { font-style: normal; color: var(--accent-cyan); }
+
+/* ── ABOUT ── */
+#about { background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 100%); }
+.about-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+  align-items: center; max-width: 1200px; margin: 0 auto;
+}
+.about-text .section-title { margin-bottom: 24px; }
+.about-text p { color: var(--metal-1); font-weight: 300; font-size: 1.05rem; line-height: 1.8; margin-bottom: 20px; }
+.about-pillars {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px;
+}
+.pillar {
+  padding: 20px; border: 1px solid var(--border);
+  border-radius: 12px; background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  transition: border-color 0.3s, transform 0.3s;
+}
+.pillar:hover { border-color: rgba(0,212,255,0.35); transform: translateY(-3px); }
+.pillar-icon { font-size: 1.5rem; margin-bottom: 10px; }
+.pillar h4 { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+.pillar p { font-size: 0.825rem; color: var(--metal-1); line-height: 1.5; }
+
+.about-visual { position: relative; }
+.molecule-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 32px;
+  backdrop-filter: blur(30px);
+  box-shadow: var(--glow-blue);
+  position: relative; overflow: hidden;
+}
+.molecule-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(0,212,255,0.07), transparent 70%);
+}
+#molecule-svg { width: 100%; height: 280px; }
+
+/* ── SERVICES ── */
+#services { background: var(--bg-mid); }
+.services-header { max-width: 1200px; margin: 0 auto 64px; }
+.services-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+  max-width: 1200px; margin: 0 auto;
+}
+.service-card {
+  padding: 36px 28px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px; backdrop-filter: blur(20px);
+  position: relative; overflow: hidden;
+  cursor: none;
+  transition: transform 0.35s cubic-bezier(0.23,1,0.32,1), border-color 0.3s, box-shadow 0.3s;
+}
+.service-card::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background: linear-gradient(135deg, rgba(0,212,255,0.05) 0%, transparent 60%);
+  opacity: 0; transition: opacity 0.4s;
+}
+.service-card:hover { transform: translateY(-8px); border-color: rgba(0,212,255,0.3); box-shadow: var(--glow-cyan); }
+.service-card:hover::before { opacity: 1; }
+.service-card > * { position: relative; z-index: 1; }
+
+.service-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; color: var(--accent-cyan);
+  margin-bottom: 24px; letter-spacing: 0.1em;
+}
+.service-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(26,109,255,0.2), rgba(0,212,255,0.1));
+  border: 1px solid rgba(0,212,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; margin-bottom: 20px;
+}
+.service-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.05rem; font-weight: 700;
+  margin-bottom: 12px; color: var(--text-primary);
+}
+.service-card p { font-size: 0.875rem; color: var(--metal-1); line-height: 1.65; }
+.service-tag {
+  display: inline-block; margin-top: 20px;
+  padding: 4px 12px; border-radius: 100px;
+  background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+  font-size: 0.72rem; color: var(--accent-cyan); letter-spacing: 0.06em;
+}
+
+/* ── PARTNERS ── */
+#partners { background: var(--bg-deep); padding: 80px 60px; overflow: hidden; }
+.partners-header { text-align: center; max-width: 600px; margin: 0 auto 64px; }
+.ticker-wrap {
+  overflow: hidden; position: relative;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+.ticker-row { display: flex; gap: 0; margin-bottom: 20px; }
+.ticker-row-2 { display: flex; gap: 0; }
+.ticker-inner {
+  display: flex; gap: 20px; animation: ticker-ltr 30s linear infinite;
+  width: max-content;
+}
+.ticker-inner-rtl {
+  display: flex; gap: 20px; animation: ticker-rtl 35s linear infinite;
+  width: max-content;
+}
+@keyframes ticker-ltr { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes ticker-rtl { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+.partner-chip {
+  flex-shrink: 0;
+  padding: 14px 28px;
+  background: rgba(8,18,38,0.8);
+  border: 1px solid var(--border);
+  border-radius: 10px; backdrop-filter: blur(10px);
+  display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.3s;
+  white-space: nowrap;
+}
+.partner-chip:hover { border-color: rgba(0,212,255,0.35); }
+.partner-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
+.partner-name { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--metal-2); }
+.partner-sector { font-size: 0.72rem; color: var(--text-muted); }
+
+/* ── DATA SHOWCASE ── */
+#data-showcase { background: var(--bg-mid); }
+.showcase-header { max-width: 1200px; margin: 0 auto 64px; }
+.dashboard-shell {
+  max-width: 1200px; margin: 0 auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px; overflow: hidden;
+  backdrop-filter: blur(30px);
+  box-shadow: var(--glow-blue);
+}
+.dashboard-topbar {
+  padding: 16px 24px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.db-dot { width: 10px; height: 10px; border-radius: 50%; }
+.db-dot.r { background: #ff5f57; }
+.db-dot.y { background: #ffbd2e; }
+.db-dot.g { background: #28c840; }
+.db-title { margin-left: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--metal-1); }
+.db-live { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; }
+.db-live::before { content: ''; width: 6px; height: 6px; background: var(--accent-cyan); border-radius: 50%; animation: pulse 1.5s infinite; }
+
+.dashboard-body {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0;
+}
+.db-col { padding: 28px; border-right: 1px solid var(--border); }
+.db-col:last-child { border-right: none; }
+.db-col h4 { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; margin-bottom: 20px; color: var(--metal-2); }
+
+.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.kpi {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px;
+}
+.kpi .val {
+  font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; line-height: 1;
+  background: linear-gradient(135deg, #fff, var(--accent-cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.kpi .kpi-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+.kpi .delta { font-size: 0.72rem; color: var(--accent-mint); margin-top: 6px; }
+
+.chart-wrap { height: 180px; position: relative; margin-top: 8px; }
+.pipeline-items { display: flex; flex-direction: column; gap: 10px; }
+.pipeline-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03); border-radius: 8px;
+  font-size: 0.8rem; border: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+.pipeline-item:hover { border-color: rgba(0,212,255,0.25); }
+.pipe-status { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.pipe-name { flex: 1; color: var(--metal-2); }
+.pipe-val { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent-cyan); }
+.pipe-bar-track { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-top: 4px; }
+.pipe-bar-fill { height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); }
+
+/* ── CASE STUDIES ── */
+#case-studies { background: var(--bg-deep); }
+.cases-header { max-width: 1200px; margin: 0 auto 64px; }
+.cases-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  max-width: 1200px; margin: 0 auto;
+}
+.case-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden; cursor: none;
+  transition: transform 0.35s cubic-bezier(0.23,1,0.32,1), box-shadow 0.35s;
+}
+.case-card:hover { transform: translateY(-6px); box-shadow: var(--glow-cyan); }
+.case-header-bar {
+  height: 5px;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+}
+.case-body { padding: 28px; }
+.case-sector {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  color: var(--accent-cyan); letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.case-card h3 {
+  font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700;
+  margin-bottom: 12px; line-height: 1.3;
+}
+.case-card p { font-size: 0.875rem; color: var(--metal-1); line-height: 1.6; margin-bottom: 24px; }
+.case-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.case-metric {
+  background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.12);
+  border-radius: 8px; padding: 12px;
+}
+.case-metric .m-val {
+  font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800;
+  color: var(--accent-cyan); line-height: 1;
+}
+.case-metric .m-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+
+/* ── CONTACT / CTA ── */
+#contact {
+  background: var(--bg-mid);
+  text-align: center;
+}
+.contact-inner { max-width: 700px; margin: 0 auto; }
+.contact-inner .section-label { justify-content: center; }
+.contact-inner .section-label::before { display: none; }
+.contact-inner .section-title { margin: 0 auto 20px; text-align: center; }
+.contact-inner p { color: var(--metal-1); font-size: 1.05rem; font-weight: 300; margin-bottom: 48px; }
+.contact-form {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 48px; backdrop-filter: blur(30px);
+  box-shadow: var(--glow-blue);
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.form-field { display: flex; flex-direction: column; }
+.form-field label { font-size: 0.78rem; color: var(--metal-1); margin-bottom: 8px; letter-spacing: 0.05em; }
+.form-field input, .form-field select, .form-field textarea {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 8px; padding: 13px 16px;
+  color: var(--text-primary); font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem; outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.form-field input::placeholder, .form-field textarea::placeholder { color: var(--text-muted); }
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+}
+.form-field select { cursor: none; }
+.form-field select option { background: var(--bg-mid); }
+.form-field textarea { resize: vertical; min-height: 100px; }
+.form-full { grid-column: 1/-1; }
+.submit-btn {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  border: none; border-radius: 8px; margin-top: 8px;
+  color: #fff; font-family: 'Syne', sans-serif;
+  font-size: 1rem; font-weight: 700; letter-spacing: 0.05em;
+  cursor: none; transition: transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 0 30px rgba(0,212,255,0.3);
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(0,212,255,0.5); }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border);
+  padding: 40px 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-logo { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; }
+.footer-logo span { color: var(--accent-cyan); }
+.footer-copy { font-size: 0.8rem; color: var(--text-muted); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+.footer-links a:hover { color: var(--accent-cyan); }
+
+/* ── SCROLL REVEAL ── */
+.reveal { opacity: 0; transform: translateY(40px); }
+
+/* ── MOBILE ── */
+@media (max-width: 900px) {
+  nav { padding: 16px 24px; }
+  .nav-links { display: none; }
+  section { padding: 80px 24px; }
+  .about-grid { grid-template-columns: 1fr; gap: 48px; }
+  .services-grid { grid-template-columns: 1fr 1fr; }
+  .dashboard-body { grid-template-columns: 1fr; }
+  .db-col { border-right: none; border-bottom: 1px solid var(--border); }
+  .cases-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  footer { flex-direction: column; gap: 20px; text-align: center; }
+  .hero-stats { gap: 32px; }
+}
+@media (max-width: 600px) {
+  .services-grid { grid-template-columns: 1fr; }
+  .about-pillars { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="logo">Chem<span>Axis</span></div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#partners">Partners</a></li>
+    <li><a href="#data-showcase">Data</a></li>
+    <li><a href="#case-studies">Cases</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Request Access</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-gradient"></div>
+  <div class="hero-content">
+    <div class="hero-badge" id="hero-badge">Chemical Intelligence Platform</div>
+    <h1 class="hero-title" id="hero-title">
+      <span class="line">Powering Chemical</span>
+      <span class="line gradient-text">Intelligence</span>
+      <span class="line">Through Data</span>
+    </h1>
+    <p class="hero-sub" id="hero-sub">Real-time market analytics, supply chain intelligence, and AI-driven forecasting for the global chemical and manufacturing sector.</p>
+    <div class="hero-actions" id="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('data-showcase').scrollIntoView({behavior:'smooth'})">Explore Data Solutions</button>
+      <button class="btn-secondary" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Book a Demo</button>
+    </div>
+  </div>
+  <div class="hero-stats" id="hero-stats">
+    <div class="hero-stat"><div class="num" data-count="2400">0</div><div class="label">Data Points / Hour</div></div>
+    <div class="hero-stat"><div class="num" data-count="150">0</div><div class="label">Industry Partners</div></div>
+    <div class="hero-stat"><div class="num" data-count="98">0</div><div class="label">Accuracy Rate %</div></div>
+    <div class="hero-stat"><div class="num" data-count="32">0</div><div class="label">Countries Covered</div></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-grid">
+    <div class="about-text reveal">
+      <div class="section-label">Who We Are</div>
+      <h2 class="section-title">The Data Layer Behind Chemical <em>Excellence</em></h2>
+      <p>ChemAxis is India's premier chemical data intelligence platform, trusted by conglomerates like Godrej Group and Mamaearth to power critical decisions across procurement, formulation, and market strategy.</p>
+      <p>We transform raw commodity data into actionable intelligence — delivering the clarity that enterprise chemical and manufacturing operations need to stay ahead in a volatile global market.</p>
+      <div class="about-pillars">
+        <div class="pillar"><div class="pillar-icon">🔬</div><h4>Scientific Rigor</h4><p>Every dataset validated by domain experts with 15+ years in chemical markets.</p></div>
+        <div class="pillar"><div class="pillar-icon">⚡</div><h4>Real-Time Feeds</h4><p>Sub-second price discovery across 2,400+ chemical commodities globally.</p></div>
+        <div class="pillar"><div class="pillar-icon">🔒</div><h4>Enterprise Security</h4><p>SOC 2 Type II certified. Your competitive data stays yours.</p></div>
+        <div class="pillar"><div class="pillar-icon">🤖</div><h4>AI Forecasting</h4><p>Predictive models with 94–98% accuracy across key feedstock categories.</p></div>
+      </div>
+    </div>
+    <div class="about-visual reveal">
+      <div class="molecule-card">
+        <svg id="molecule-svg" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+          <!-- Bonds -->
+          <g id="bonds" stroke="rgba(0,212,255,0.25)" stroke-width="1.5" fill="none">
+            <line x1="200" y1="150" x2="120" y2="90"/><line x1="200" y1="150" x2="280" y2="90"/>
+            <line x1="200" y1="150" x2="120" y2="210"/><line x1="200" y1="150" x2="280" y2="210"/>
+            <line x1="120" y1="90" x2="60" y2="60"/><line x1="280" y1="90" x2="340" y2="60"/>
+            <line x1="120" y1="210" x2="60" y2="240"/><line x1="280" y1="210" x2="340" y2="240"/>
+            <line x1="120" y1="90" x2="120" y2="210"/><line x1="280" y1="90" x2="280" y2="210"/>
+            <line x1="200" y1="150" x2="200" y2="40"/><line x1="200" y1="150" x2="200" y2="260"/>
+          </g>
+          <!-- Atoms -->
+          <g id="atoms">
+            <circle cx="200" cy="150" r="14" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="1.5"/>
+            <circle cx="120" cy="90"  r="10" fill="rgba(26,109,255,0.2)"  stroke="#1a6dff" stroke-width="1.5"/>
+            <circle cx="280" cy="90"  r="10" fill="rgba(26,109,255,0.2)"  stroke="#1a6dff" stroke-width="1.5"/>
+            <circle cx="120" cy="210" r="10" fill="rgba(26,109,255,0.2)"  stroke="#1a6dff" stroke-width="1.5"/>
+            <circle cx="280" cy="210" r="10" fill="rgba(26,109,255,0.2)"  stroke="#1a6dff" stroke-width="1.5"/>
+            <circle cx="60"  cy="60"  r="7"  fill="rgba(0,255,179,0.15)"  stroke="#00ffb3" stroke-width="1.5"/>
+            <circle cx="340" cy="60"  r="7"  fill="rgba(0,255,179,0.15)"  stroke="#00ffb3" stroke-width="1.5"/>
+            <circle cx="60"  cy="240" r="7"  fill="rgba(0,255,179,0.15)"  stroke="#00ffb3" stroke-width="1.5"/>
+            <circle cx="340" cy="240" r="7"  fill="rgba(0,255,179,0.15)"  stroke="#00ffb3" stroke-width="1.5"/>
+            <circle cx="200" cy="40"  r="7"  fill="rgba(0,255,179,0.15)"  stroke="#00ffb3" stroke-width="1.5"/>
+            <circle cx="200" cy="260" r="7"  fill="rgba(0,255,179,0.15)"  stroke="#00ffb3" stroke-width="1.5"/>
+          </g>
+          <!-- Labels -->
+          <text x="200" y="155" text-anchor="middle" fill="#00d4ff" font-family="JetBrains Mono" font-size="9">CH</text>
+          <text x="120" y="94"  text-anchor="middle" fill="#8899bb" font-family="JetBrains Mono" font-size="8">C</text>
+          <text x="280" y="94"  text-anchor="middle" fill="#8899bb" font-family="JetBrains Mono" font-size="8">C</text>
+          <text x="120" y="214" text-anchor="middle" fill="#8899bb" font-family="JetBrains Mono" font-size="8">N</text>
+          <text x="280" y="214" text-anchor="middle" fill="#8899bb" font-family="JetBrains Mono" font-size="8">O</text>
+        </svg>
+        <div style="margin-top:16px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text-muted); text-align:center;">
+          Polymeric Structure Analysis — ChemAxis Engine v4.2
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="services-header reveal">
+    <div class="section-label">What We Offer</div>
+    <h2 class="section-title">Data Services Built for <em>Industrial Scale</em></h2>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <div class="service-num">01 — CORE</div>
+      <div class="service-icon">📊</div>
+      <h3>Chemical Market Analytics</h3>
+      <p>Live pricing, demand signals, and competitive benchmarking across 2,400+ commodities in petrochemicals, specialty chemicals, and agrochemicals.</p>
+      <span class="service-tag">Live Data</span>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">02 — LOGISTICS</div>
+      <div class="service-icon">🚚</div>
+      <h3>Supply Chain Intelligence</h3>
+      <p>End-to-end visibility into procurement pipelines, logistics disruptions, and raw material lead times across Asia, Europe, and North America.</p>
+      <span class="service-tag">Global Coverage</span>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">03 — INSIGHTS</div>
+      <div class="service-icon">📄</div>
+      <h3>Industry Reports</h3>
+      <p>Deep-dive quarterly and monthly reports authored by chemical domain experts, covering regulatory changes, capacity expansions, and margin trends.</p>
+      <span class="service-tag">Expert Authored</span>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">04 — AI</div>
+      <div class="service-icon">🧠</div>
+      <h3>AI-Driven Forecasting</h3>
+      <p>Proprietary ML models predict feedstock price movements, demand cycles, and supply shocks with up to 98% accuracy over 30–90 day horizons.</p>
+      <span class="service-tag">98% Accuracy</span>
+    </div>
+  </div>
+</section>
+
+<!-- PARTNERS -->
+<section id="partners">
+  <div class="partners-header reveal">
+    <div class="section-label" style="justify-content:center"><span style="width:32px;height:1px;background:var(--accent-cyan)"></span> Trusted By Leaders</div>
+    <h2 class="section-title" style="text-align:center;margin:0 auto">Partnered with India's <em>Most Trusted</em> Chemical & Consumer Brands</h2>
+  </div>
+  <div class="ticker-wrap">
+    <div class="ticker-row">
+      <div class="ticker-inner">
+        <!-- Row 1 duplicated for seamless loop -->
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,100,60,0.3);color:#00a86b">G</div><div><div class="partner-name">Godrej Industries</div><div class="partner-sector">Conglomerate · Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,80,80,0.2);color:#ff5050">M</div><div><div class="partner-name">Mamaearth</div><div class="partner-sector">FMCG · Natural Ingredients</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,150,255,0.2);color:#0096ff">R</div><div><div class="partner-name">Reliance Industries</div><div class="partner-sector">Petrochemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,180,0,0.2);color:#ffb400">T</div><div><div class="partner-name">Tata Chemicals</div><div class="partner-sector">Specialty Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(180,0,255,0.15);color:#b400ff">U</div><div><div class="partner-name">UPL Limited</div><div class="partner-sector">Agrochemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,212,255,0.15);color:#00d4ff">A</div><div><div class="partner-name">Aarti Industries</div><div class="partner-sector">Specialty Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,120,0,0.2);color:#ff7800">L</div><div><div class="partner-name">Laurus Labs</div><div class="partner-sector">Pharma Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,200,100,0.2);color:#00c864">V</div><div><div class="partner-name">Vinati Organics</div><div class="partner-sector">Organic Specialty</div></div></div>
+        <!-- Duplicate -->
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,100,60,0.3);color:#00a86b">G</div><div><div class="partner-name">Godrej Industries</div><div class="partner-sector">Conglomerate · Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,80,80,0.2);color:#ff5050">M</div><div><div class="partner-name">Mamaearth</div><div class="partner-sector">FMCG · Natural Ingredients</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,150,255,0.2);color:#0096ff">R</div><div><div class="partner-name">Reliance Industries</div><div class="partner-sector">Petrochemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,180,0,0.2);color:#ffb400">T</div><div><div class="partner-name">Tata Chemicals</div><div class="partner-sector">Specialty Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(180,0,255,0.15);color:#b400ff">U</div><div><div class="partner-name">UPL Limited</div><div class="partner-sector">Agrochemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,212,255,0.15);color:#00d4ff">A</div><div><div class="partner-name">Aarti Industries</div><div class="partner-sector">Specialty Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,120,0,0.2);color:#ff7800">L</div><div><div class="partner-name">Laurus Labs</div><div class="partner-sector">Pharma Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,200,100,0.2);color:#00c864">V</div><div><div class="partner-name">Vinati Organics</div><div class="partner-sector">Organic Specialty</div></div></div>
+      </div>
+    </div>
+    <div class="ticker-row-2" style="margin-top:16px">
+      <div class="ticker-inner-rtl">
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,0,100,0.15);color:#ff0064">H</div><div><div class="partner-name">Hindustan Unilever</div><div class="partner-sector">FMCG · Surfactants</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,212,255,0.12);color:#00d4ff">D</div><div><div class="partner-name">Deepak Nitrite</div><div class="partner-sector">Nitro Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,200,0,0.15);color:#ffc800">P</div><div><div class="partner-name">PI Industries</div><div class="partner-sector">Agrochemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,255,150,0.12);color:#00ff96">S</div><div><div class="partner-name">SRF Limited</div><div class="partner-sector">Fluorochemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(100,0,255,0.15);color:#6400ff">N</div><div><div class="partner-name">Navin Fluorine</div><div class="partner-sector">Specialty Fluorine</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,80,0,0.15);color:#ff5000">C</div><div><div class="partner-name">Coromandel Intl.</div><div class="partner-sector">Fertilizers</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,150,255,0.15);color:#0096ff">B</div><div><div class="partner-name">BASF India</div><div class="partner-sector">Performance Chemicals</div></div></div>
+        <!-- Duplicate -->
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,0,100,0.15);color:#ff0064">H</div><div><div class="partner-name">Hindustan Unilever</div><div class="partner-sector">FMCG · Surfactants</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,212,255,0.12);color:#00d4ff">D</div><div><div class="partner-name">Deepak Nitrite</div><div class="partner-sector">Nitro Chemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,200,0,0.15);color:#ffc800">P</div><div><div class="partner-name">PI Industries</div><div class="partner-sector">Agrochemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,255,150,0.12);color:#00ff96">S</div><div><div class="partner-name">SRF Limited</div><div class="partner-sector">Fluorochemicals</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(100,0,255,0.15);color:#6400ff">N</div><div><div class="partner-name">Navin Fluorine</div><div class="partner-sector">Specialty Fluorine</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(255,80,0,0.15);color:#ff5000">C</div><div><div class="partner-name">Coromandel Intl.</div><div class="partner-sector">Fertilizers</div></div></div>
+        <div class="partner-chip"><div class="partner-dot" style="background:rgba(0,150,255,0.15);color:#0096ff">B</div><div><div class="partner-name">BASF India</div><div class="partner-sector">Performance Chemicals</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DATA SHOWCASE -->
+<section id="data-showcase">
+  <div class="showcase-header reveal">
+    <div class="section-label">Live Intelligence</div>
+    <h2 class="section-title">The Data Dashboard That Drives <em>Decisions</em></h2>
+  </div>
+  <div class="dashboard-shell reveal">
+    <div class="dashboard-topbar">
+      <div class="db-dot r"></div><div class="db-dot y"></div><div class="db-dot g"></div>
+      <span class="db-title">ChemAxis Intelligence Platform — Dashboard v4.2</span>
+      <span class="db-live">LIVE FEED ACTIVE</span>
+    </div>
+    <div class="dashboard-body">
+      <!-- KPIs -->
+      <div class="db-col">
+        <h4>Market KPIs — Chemical Sector</h4>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="val" data-count="₹4.2T">—</div><div class="kpi-label">India Chem Market</div><div class="delta">↑ 11.4% YoY</div></div>
+          <div class="kpi"><div class="val" data-count="$182">—</div><div class="kpi-label">Ethylene / MT</div><div class="delta">↑ 3.2% this week</div></div>
+          <div class="kpi"><div class="val" data-count="94.7%">—</div><div class="kpi-label">Model Accuracy</div><div class="delta">30-day horizon</div></div>
+          <div class="kpi"><div class="val" data-count="2,418">—</div><div class="kpi-label">Live Signals</div><div class="delta">Updated 2m ago</div></div>
+        </div>
+      </div>
+      <!-- Chart -->
+      <div class="db-col">
+        <h4>Feedstock Price Index (90-Day)</h4>
+        <div class="chart-wrap">
+          <canvas id="priceChart"></canvas>
+        </div>
+      </div>
+      <!-- Pipeline -->
+      <div class="db-col">
+        <h4>Supply Chain Pipeline Status</h4>
+        <div class="pipeline-items">
+          <div class="pipeline-item">
+            <div class="pipe-status" style="background:#00ffb3"></div>
+            <div style="flex:1">
+              <div class="pipe-name">Benzene — Mumbai Port</div>
+              <div class="pipe-bar-track"><div class="pipe-bar-fill" style="width:87%"></div></div>
+            </div>
+            <div class="pipe-val">87%</div>
+          </div>
+          <div class="pipeline-item">
+            <div class="pipe-status" style="background:#00d4ff"></div>
+            <div style="flex:1">
+              <div class="pipe-name">Methanol — Kandla</div>
+              <div class="pipe-bar-track"><div class="pipe-bar-fill" style="width:62%"></div></div>
+            </div>
+            <div class="pipe-val">62%</div>
+          </div>
+          <div class="pipeline-item">
+            <div class="pipe-status" style="background:#ffbd2e"></div>
+            <div style="flex:1">
+              <div class="pipe-name">Acetone — Chennai</div>
+              <div class="pipe-bar-track"><div class="pipe-bar-fill" style="width:45%;background:linear-gradient(90deg,#ff7800,#ffbd2e)"></div></div>
+            </div>
+            <div class="pipe-val">45%</div>
+          </div>
+          <div class="pipeline-item">
+            <div class="pipe-status" style="background:#00ffb3"></div>
+            <div style="flex:1">
+              <div class="pipe-name">Toluene — JNPT</div>
+              <div class="pipe-bar-track"><div class="pipe-bar-fill" style="width:91%"></div></div>
+            </div>
+            <div class="pipe-val">91%</div>
+          </div>
+          <div class="pipeline-item">
+            <div class="pipe-status" style="background:#ff5f57"></div>
+            <div style="flex:1">
+              <div class="pipe-name">Styrene — Vizag</div>
+              <div class="pipe-bar-track"><div class="pipe-bar-fill" style="width:28%;background:linear-gradient(90deg,#ff2020,#ff5f57)"></div></div>
+            </div>
+            <div class="pipe-val">28%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CASE STUDIES -->
+<section id="case-studies">
+  <div class="cases-header reveal">
+    <div class="section-label">Proof of Impact</div>
+    <h2 class="section-title">Real Intelligence. <em>Measurable Results.</em></h2>
+  </div>
+  <div class="cases-grid">
+    <div class="case-card reveal">
+      <div class="case-header-bar"></div>
+      <div class="case-body">
+        <div class="case-sector">Conglomerate / Specialty Chemicals</div>
+        <h3>Godrej Industries Reduced Procurement Costs by 23%</h3>
+        <p>By integrating ChemAxis real-time feedstock pricing into their procurement workflow, Godrej's chemicals division eliminated reactive buying and moved to predictive sourcing.</p>
+        <div class="case-metrics">
+          <div class="case-metric"><div class="m-val">23%</div><div class="m-label">Cost Reduction</div></div>
+          <div class="case-metric"><div class="m-val">₹42Cr</div><div class="m-label">Annual Savings</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="case-card reveal">
+      <div class="case-header-bar" style="background:linear-gradient(90deg,#00ffb3,#00d4ff)"></div>
+      <div class="case-body">
+        <div class="case-sector">FMCG / Natural Ingredients</div>
+        <h3>Mamaearth Accelerated Ingredient Sourcing by 3.8×</h3>
+        <p>ChemAxis supply chain maps helped Mamaearth identify 6 alternative natural ingredient suppliers within 48 hours of a primary supplier disruption, preventing stockouts.</p>
+        <div class="case-metrics">
+          <div class="case-metric"><div class="m-val">3.8×</div><div class="m-label">Faster Sourcing</div></div>
+          <div class="case-metric"><div class="m-val">48hr</div><div class="m-label">Response Time</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="case-card reveal">
+      <div class="case-header-bar" style="background:linear-gradient(90deg,#6400ff,#1a6dff)"></div>
+      <div class="case-body">
+        <div class="case-sector">Agrochemicals / Formulations</div>
+        <h3>UPL Limited Improved Margin Forecasting to 96.2%</h3>
+        <p>Our AI forecasting engine, calibrated on 8 years of UPL's historical procurement data, now predicts agrochemical feedstock margins with near-perfect accuracy across 6-week windows.</p>
+        <div class="case-metrics">
+          <div class="case-metric"><div class="m-val">96.2%</div><div class="m-label">Forecast Accuracy</div></div>
+          <div class="case-metric"><div class="m-val">6-wk</div><div class="m-label">Forecast Horizon</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-inner">
+    <div class="reveal">
+      <div class="section-label">Get Started</div>
+      <h2 class="section-title">Request Data Access or <em>Book a Demo</em></h2>
+      <p>Join 150+ industry leaders who trust ChemAxis for their most critical chemical market decisions.</p>
+    </div>
+    <div class="contact-form reveal">
+      <div class="form-row">
+        <div class="form-field"><label>First Name</label><input type="text" placeholder="Arjun"></div>
+        <div class="form-field"><label>Last Name</label><input type="text" placeholder="Mehta"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Work Email</label><input type="email" placeholder="arjun@company.com"></div>
+        <div class="form-field"><label>Company</label><input type="text" placeholder="Godrej Industries Ltd."></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Industry Segment</label>
+          <select>
+            <option value="">Select segment</option>
+            <option>Petrochemicals</option>
+            <option>Specialty Chemicals</option>
+            <option>Agrochemicals</option>
+            <option>FMCG / Consumer</option>
+            <option>Pharma / API</option>
+            <option>Fertilizers</option>
+            <option>Polymers / Plastics</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Data Need</label>
+          <select>
+            <option value="">Select service</option>
+            <option>Market Analytics</option>
+            <option>Supply Chain Intelligence</option>
+            <option>AI Forecasting</option>
+            <option>Industry Reports</option>
+            <option>Full Platform Access</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field form-full"><label>Tell us about your data challenge (optional)</label><textarea placeholder="We're looking to improve our benzene sourcing strategy..."></textarea></div>
+      </div>
+      <button class="submit-btn">Request Data Access →</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Chem<span>Axis</span></div>
+  <div class="footer-copy">© 2025 ChemAxis Technologies Pvt. Ltd. · Mumbai, India</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a><a href="#">Terms</a><a href="#">API Docs</a><a href="#">LinkedIn</a>
+  </div>
+</footer>
+
+<script>
+/* ═══ CURSOR ═══ */
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cursor.style.left=mx+'px'; cursor.style.top=my+'px'; });
+function animRing() { rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animRing); }
+animRing();
+
+/* ═══ NAVBAR SCROLL ═══ */
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+/* ═══ HERO CANVAS (Molecular Particle System) ═══ */
+const canvas = document.getElementById('hero-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles, connections;
+
+function initCanvas() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  particles = [];
+  for (let i = 0; i < 80; i++) {
+    particles.push({
+      x: Math.random()*W, y: Math.random()*H,
+      vx: (Math.random()-0.5)*0.35, vy: (Math.random()-0.5)*0.35,
+      r: Math.random()*3+1.5,
+      a: Math.random()*Math.PI*2,
+      type: Math.random() > 0.7 ? 'node' : 'dot'
+    });
+  }
+}
+window.addEventListener('resize', initCanvas);
+initCanvas();
+
+let mouseX=W/2, mouseY=H/2;
+document.addEventListener('mousemove', e => { mouseX=e.clientX; mouseY=e.clientY; });
+
+function drawFrame() {
+  ctx.clearRect(0,0,W,H);
+  // Update
+  for (const p of particles) {
+    p.x += p.vx + (mouseX - W/2)*0.00005;
+    p.y += p.vy + (mouseY - H/2)*0.00005;
+    if (p.x<0) p.x=W; if (p.x>W) p.x=0;
+    if (p.y<0) p.y=H; if (p.y>H) p.y=0;
+  }
+  // Draw connections
+  for (let i=0; i<particles.length; i++) {
+    for (let j=i+1; j<particles.length; j++) {
+      const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if (dist<130) {
+        const alpha=(1-dist/130)*0.25;
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle=`rgba(0,212,255,${alpha})`;
+        ctx.lineWidth=0.8;
+        ctx.stroke();
+      }
+    }
+  }
+  // Draw particles
+  for (const p of particles) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    const alpha = p.type==='node' ? 0.7 : 0.35;
+    ctx.fillStyle = p.type==='node' ? `rgba(0,212,255,${alpha})` : `rgba(26,109,255,${alpha})`;
+    ctx.fill();
+    if (p.type==='node') {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r*3, 0, Math.PI*2);
+      ctx.fillStyle='rgba(0,212,255,0.04)';
+      ctx.fill();
+    }
+  }
+  requestAnimationFrame(drawFrame);
+}
+drawFrame();
+
+/* ═══ GSAP HERO ENTRANCE ═══ */
+gsap.registerPlugin(ScrollTrigger);
+
+const tl = gsap.timeline({ delay: 0.2 });
+tl.to('#hero-badge', { opacity:1, y:0, duration:0.7, ease:'power3.out' })
+  .to('#hero-title',  { opacity:1, y:0, duration:0.8, ease:'power3.out' }, '-=0.3')
+  .to('#hero-sub',    { opacity:1, y:0, duration:0.7, ease:'power3.out' }, '-=0.4')
+  .to('#hero-actions',{ opacity:1, y:0, duration:0.7, ease:'power3.out' }, '-=0.4')
+  .to('#hero-stats',  { opacity:1,       duration:0.8, ease:'power2.out' }, '-=0.2');
+
+/* ═══ COUNTER ANIMATION ═══ */
+function animateCounters() {
+  document.querySelectorAll('.num[data-count]').forEach(el => {
+    const target = el.getAttribute('data-count');
+    const numOnly = parseFloat(target.replace(/[^0-9.]/g,''));
+    const prefix = target.match(/^[^0-9]*/)[0];
+    const suffix = target.match(/[^0-9.]*$/)[0];
+    let start=0, duration=1600, startTime=null;
+    function step(ts) {
+      if (!startTime) startTime=ts;
+      const progress=Math.min((ts-startTime)/duration,1);
+      const eased=1-Math.pow(1-progress,3);
+      const val=Math.round(eased*numOnly);
+      el.textContent=prefix+(numOnly>999?val.toLocaleString():val)+suffix;
+      if(progress<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+setTimeout(animateCounters, 900);
+
+/* ═══ SCROLL REVEAL ═══ */
+const reveals = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      gsap.to(entry.target, {
+        opacity:1, y:0, duration:0.8,
+        ease:'power3.out',
+        delay: (Array.from(reveals).indexOf(entry.target) % 4) * 0.1
+      });
+      revealObs.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+reveals.forEach(el => revealObs.observe(el));
+
+/* ═══ CHART.JS ═══ */
+const labels90 = [];
+const prices = [], prices2 = [];
+const base1=100, base2=110;
+for (let i=89; i>=0; i--) {
+  const d = new Date(); d.setDate(d.getDate()-i);
+  labels90.push(d.toLocaleDateString('en-IN',{month:'short',day:'numeric'}));
+  const noise = (s,b) => b + Math.sin(i*0.18+s)*12 + Math.cos(i*0.09+s*2)*7 + (Math.random()-0.5)*4;
+  prices.push(noise(0,base1));
+  prices2.push(noise(2.5,base2));
+}
+// Only show every 15th label
+const sparseLabels = labels90.map((l,i)=>i%15===0?l:'');
+
+const priceCtx = document.getElementById('priceChart').getContext('2d');
+new Chart(priceCtx, {
+  type:'line',
+  data:{
+    labels: sparseLabels,
+    datasets:[
+      {
+        label:'Benzene Index',
+        data: prices,
+        borderColor:'rgba(0,212,255,0.9)',
+        backgroundColor:'rgba(0,212,255,0.06)',
+        borderWidth:1.5, pointRadius:0, fill:true, tension:0.4
+      },
+      {
+        label:'Toluene Index',
+        data: prices2,
+        borderColor:'rgba(0,255,179,0.7)',
+        backgroundColor:'rgba(0,255,179,0.04)',
+        borderWidth:1.5, pointRadius:0, fill:true, tension:0.4
+      }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    interaction:{ mode:'index', intersect:false },
+    plugins:{
+      legend:{ display:true, labels:{ color:'rgba(200,210,230,0.7)', boxWidth:12, font:{size:10,family:'JetBrains Mono'} } },
+      tooltip:{
+        backgroundColor:'rgba(6,15,30,0.95)',
+        borderColor:'rgba(0,212,255,0.3)', borderWidth:1,
+        titleColor:'#00d4ff', bodyColor:'#8899bb',
+        titleFont:{family:'JetBrains Mono', size:11},
+        bodyFont:{family:'DM Sans', size:11},
+        callbacks:{label: ctx=>`  ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`}
+      }
+    },
+    scales:{
+      x:{ grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'rgba(136,153,187,0.6)', font:{size:9,family:'JetBrains Mono'}, maxRotation:0} },
+      y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'rgba(136,153,187,0.6)', font:{size:9,family:'JetBrains Mono'}, callback:v=>'$'+v.toFixed(0)} }
+    }
+  }
+});
+
+/* ═══ MOLECULE ANIMATION ═══ */
+(function animMolecule() {
+  const svg = document.getElementById('molecule-svg');
+  if (!svg) return;
+  let t = 0;
+  const atoms = svg.querySelectorAll('#atoms circle');
+  const centers = [[200,150],[120,90],[280,90],[120,210],[280,210],[60,60],[340,60],[60,240],[340,240],[200,40],[200,260]];
+  function tick() {
+    t += 0.012;
+    atoms.forEach((c,i) => {
+      const [bx,by]=centers[i];
+      const amp = i===0?3:i<5?5:7;
+      const phase = i*0.7;
+      c.setAttribute('cx', bx+Math.sin(t+phase)*amp);
+      c.setAttribute('cy', by+Math.cos(t*0.7+phase)*amp);
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+/* ═══ KPI TICKER ANIMATION ═══ */
+const kpiVals = document.querySelectorAll('.kpi .val[data-count]');
+const kpiObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const el = e.target;
+      const target = el.getAttribute('data-count');
+      el.textContent = target;
+      kpiObs.unobserve(el);
+    }
+  });
+}, {threshold:0.5});
+document.querySelectorAll('.kpi .val').forEach(el => {
+  const t = el.textContent.trim();
+  if (t && t !== '—') el.setAttribute('data-count', t);
+  kpiObs.observe(el);
+});
+
+/* ═══ FORM SUBMIT ═══ */
+document.querySelector('.submit-btn').addEventListener('click', function() {
+  this.textContent = '✓ Request Received — Our Team Will Contact You';
+  this.style.background = 'linear-gradient(135deg, #00a86b, #00ffb3)';
+  setTimeout(() => {
+    this.textContent = 'Request Data Access →';
+    this.style.background = '';
+  }, 4000);
+});
+</script>
+</body>
+</html>
