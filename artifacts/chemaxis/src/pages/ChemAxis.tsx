@@ -35,6 +35,8 @@ export function ChemAxis() {
         </motion.div>
       </div>
 
+      <FloatingMolecules />
+
       <div className="relative z-10">
         <NavBar />
         <HeroSection />
@@ -49,6 +51,206 @@ export function ChemAxis() {
         <Footer />
       </div>
     </div>
+  );
+}
+
+function HexMolecule({ size = 80, color = "#2D4A46", accent = "#B0C4B1" }: { size?: number; color?: string; accent?: string }) {
+  const r = size / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const vertices = Array.from({ length: 6 }, (_, i) => {
+    const angle = (Math.PI / 3) * i - Math.PI / 2;
+    return [cx + r * 0.85 * Math.cos(angle), cy + r * 0.85 * Math.sin(angle)];
+  });
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <motion.polygon
+        points={vertices.map((v) => v.join(",")).join(" ")}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 0.6 }}
+        transition={{ duration: 2.5, ease: "easeInOut" }}
+      />
+      {/* inner double bond */}
+      <motion.polygon
+        points={vertices.map(([x, y]) => [cx + (x - cx) * 0.7, cy + (y - cy) * 0.7].join(",")).join(" ")}
+        fill="none"
+        stroke={color}
+        strokeWidth="0.8"
+        strokeDasharray="2 4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.4 }}
+        transition={{ duration: 2, delay: 1 }}
+      />
+      {vertices.map(([x, y], i) => (
+        <motion.circle
+          key={i}
+          cx={x}
+          cy={y}
+          r="3"
+          fill={i % 2 === 0 ? color : accent}
+          initial={{ scale: 0 }}
+          animate={{ scale: [0, 1.2, 1] }}
+          transition={{ duration: 0.6, delay: 0.3 + i * 0.12 }}
+        />
+      ))}
+    </svg>
+  );
+}
+
+function BenzeneRing({ size = 70 }: { size?: number }) {
+  const r = size / 2;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <motion.circle
+        cx={r}
+        cy={r}
+        r={r * 0.55}
+        fill="none"
+        stroke="#93A5CF"
+        strokeWidth="1"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1, rotate: 360 }}
+        transition={{
+          pathLength: { duration: 2, ease: "easeInOut" },
+          rotate: { duration: 30, repeat: Infinity, ease: "linear" },
+        }}
+      />
+      <motion.circle
+        cx={r}
+        cy={r}
+        r={r * 0.42}
+        fill="none"
+        stroke="#93A5CF"
+        strokeWidth="0.6"
+        strokeDasharray="3 3"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.5, rotate: -360 }}
+        transition={{
+          opacity: { duration: 1.5, delay: 1 },
+          rotate: { duration: 40, repeat: Infinity, ease: "linear" },
+        }}
+        style={{ transformOrigin: "center" }}
+      />
+    </svg>
+  );
+}
+
+function ChainMolecule({ width = 160 }: { width?: number }) {
+  const points = [
+    [10, 30], [40, 10], [70, 30], [100, 10], [130, 30], [150, 50],
+  ];
+  return (
+    <svg width={width} height="60" viewBox={`0 0 ${width} 60`}>
+      <motion.polyline
+        points={points.map((p) => p.join(",")).join(" ")}
+        fill="none"
+        stroke="#2D4A46"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 2, ease: "easeInOut" }}
+      />
+      {points.map(([x, y], i) => (
+        <motion.circle
+          key={i}
+          cx={x}
+          cy={y}
+          r="3.5"
+          fill={i === 0 || i === points.length - 1 ? "#B0C4B1" : "#2D4A46"}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 + i * 0.15 }}
+        />
+      ))}
+    </svg>
+  );
+}
+
+function FloatingMolecules() {
+  const items = [
+    { kind: "hex", top: "8%", left: "6%", size: 90, drift: 18, dur: 14 },
+    { kind: "benzene", top: "22%", right: "8%", size: 80, drift: 22, dur: 17 },
+    { kind: "chain", top: "55%", left: "4%", size: 160, drift: 16, dur: 20 },
+    { kind: "hex", top: "72%", right: "5%", size: 110, drift: 25, dur: 19 },
+    { kind: "benzene", top: "120%", left: "10%", size: 70, drift: 20, dur: 16 },
+    { kind: "hex", top: "150%", right: "12%", size: 95, drift: 18, dur: 22 },
+    { kind: "chain", top: "180%", left: "8%", size: 140, drift: 24, dur: 18 },
+    { kind: "benzene", top: "210%", right: "6%", size: 100, drift: 22, dur: 21 },
+    { kind: "hex", top: "240%", left: "14%", size: 75, drift: 16, dur: 15 },
+    { kind: "benzene", top: "275%", right: "10%", size: 85, drift: 20, dur: 19 },
+    { kind: "chain", top: "310%", left: "6%", size: 150, drift: 18, dur: 23 },
+    { kind: "hex", top: "345%", right: "8%", size: 95, drift: 22, dur: 17 },
+  ] as const;
+
+  return (
+    <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden">
+      {items.map((it, i) => (
+        <motion.div
+          key={i}
+          className="absolute opacity-50"
+          style={{
+            top: it.top,
+            left: "left" in it ? it.left : undefined,
+            right: "right" in it ? it.right : undefined,
+          }}
+          animate={{
+            y: [0, -it.drift, 0, it.drift, 0],
+            rotate: [0, 6, 0, -6, 0],
+          }}
+          transition={{
+            duration: it.dur,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.4,
+          }}
+        >
+          {it.kind === "hex" && <HexMolecule size={it.size} />}
+          {it.kind === "benzene" && <BenzeneRing size={it.size} />}
+          {it.kind === "chain" && <ChainMolecule width={it.size} />}
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function ConnectingLines() {
+  return (
+    <svg
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-30"
+      preserveAspectRatio="none"
+      viewBox="0 0 1000 1000"
+    >
+      <defs>
+        <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#2D4A46" stopOpacity="0" />
+          <stop offset="50%" stopColor="#2D4A46" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#2D4A46" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[
+        "M 50 100 Q 300 200 500 150 T 950 250",
+        "M 100 400 Q 400 350 600 500 T 900 550",
+        "M 50 700 Q 350 800 600 750 T 950 850",
+      ].map((d, i) => (
+        <motion.path
+          key={i}
+          d={d}
+          fill="none"
+          stroke="url(#lineGrad)"
+          strokeWidth="1"
+          strokeDasharray="4 6"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 4, delay: i * 0.6, ease: "easeInOut" }}
+        />
+      ))}
+    </svg>
   );
 }
 
