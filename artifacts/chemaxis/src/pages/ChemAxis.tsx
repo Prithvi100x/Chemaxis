@@ -1,38 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useTransform, AnimatePresence, useInView } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity, Shield, Zap, Brain, BarChart3, Package,
-  FileText, TrendingUp, ChevronRight, Menu, X, ArrowRight,
-  Database, Network, Search, Globe, Mail, MapPin, Phone,
-  CheckCircle2, Building2
+  FileText, TrendingUp, Menu, X, ArrowRight, Network,
 } from "lucide-react";
 
-const STAGGER = 0.1;
-
 export function ChemAxis() {
-  const { scrollYProgress } = useScroll();
-  const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-
   return (
     <div className="min-h-screen w-full bg-[#FAFAF8] text-[#1E293B] font-sans selection:bg-[#2D4A46] selection:text-white overflow-hidden relative">
-      {/* Ambient Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
+      {/* Static grid background — no animation, GPU friendly */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-30">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E2E8F0" strokeWidth="0.5"/>
+            <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+              <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#E2E8F0" strokeWidth="0.5"/>
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
         </svg>
-        <motion.div 
-          className="absolute inset-0 opacity-30"
-          style={{ y: yBg }}
-        >
-          <div className="absolute top-[10%] left-[10%] w-[40vw] h-[40vw] rounded-full bg-[#B0C4B1]/20 blur-[100px]" />
-          <div className="absolute top-[40%] right-[10%] w-[35vw] h-[35vw] rounded-full bg-[#93A5CF]/20 blur-[100px]" />
-          <div className="absolute bottom-[10%] left-[20%] w-[45vw] h-[45vw] rounded-full bg-[#E2E8F0]/40 blur-[100px]" />
-        </motion.div>
       </div>
 
       <FloatingMolecules />
@@ -54,200 +39,243 @@ export function ChemAxis() {
   );
 }
 
-function HexMolecule({ size = 80, color = "#2D4A46", accent = "#B0C4B1" }: { size?: number; color?: string; accent?: string }) {
+/**
+ * Benzene — the iconic chemistry symbol.
+ * Hexagon ring with three alternating double-bond chords inside (Kekulé form).
+ * Static SVG; only the wrapper translates/rotates via CSS transforms (GPU).
+ */
+function Benzene({ size = 80, stroke = "#2D4A46", opacity = 0.55 }: { size?: number; stroke?: string; opacity?: number }) {
   const r = size / 2;
-  const cx = size / 2;
-  const cy = size / 2;
+  const cx = r;
+  const cy = r;
+  const outer = Array.from({ length: 6 }, (_, i) => {
+    const a = (Math.PI / 3) * i - Math.PI / 2;
+    return [cx + r * 0.88 * Math.cos(a), cy + r * 0.88 * Math.sin(a)];
+  });
+  const inner = outer.map(([x, y]) => [cx + (x - cx) * 0.72, cy + (y - cy) * 0.72]);
+  // Three alternating double bonds: edges (0-1), (2-3), (4-5)
+  const doubleEdges: [number, number][] = [[0, 1], [2, 3], [4, 5]];
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ opacity }}>
+      <polygon
+        points={outer.map((v) => v.join(",")).join(" ")}
+        fill="none"
+        stroke={stroke}
+        strokeWidth={size * 0.022}
+        strokeLinejoin="round"
+      />
+      {doubleEdges.map(([a, b], i) => (
+        <line
+          key={i}
+          x1={inner[a][0]} y1={inner[a][1]}
+          x2={inner[b][0]} y2={inner[b][1]}
+          stroke={stroke}
+          strokeWidth={size * 0.018}
+          strokeLinecap="round"
+        />
+      ))}
+    </svg>
+  );
+}
+
+/**
+ * Cyclohexane chair-like alternating ring with vertex atoms.
+ */
+function Cyclo({ size = 90, stroke = "#2D4A46", accent = "#B0C4B1", opacity = 0.55 }: { size?: number; stroke?: string; accent?: string; opacity?: number }) {
+  const r = size / 2;
+  const cx = r, cy = r;
   const vertices = Array.from({ length: 6 }, (_, i) => {
-    const angle = (Math.PI / 3) * i - Math.PI / 2;
-    return [cx + r * 0.85 * Math.cos(angle), cy + r * 0.85 * Math.sin(angle)];
+    const a = (Math.PI / 3) * i - Math.PI / 2;
+    return [cx + r * 0.85 * Math.cos(a), cy + r * 0.85 * Math.sin(a)];
   });
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <motion.polygon
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ opacity }}>
+      <polygon
         points={vertices.map((v) => v.join(",")).join(" ")}
         fill="none"
-        stroke={color}
-        strokeWidth="1.2"
+        stroke={stroke}
+        strokeWidth={size * 0.022}
         strokeLinejoin="round"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: 0.6 }}
-        transition={{ duration: 2.5, ease: "easeInOut" }}
-      />
-      {/* inner double bond */}
-      <motion.polygon
-        points={vertices.map(([x, y]) => [cx + (x - cx) * 0.7, cy + (y - cy) * 0.7].join(",")).join(" ")}
-        fill="none"
-        stroke={color}
-        strokeWidth="0.8"
-        strokeDasharray="2 4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.4 }}
-        transition={{ duration: 2, delay: 1 }}
       />
       {vertices.map(([x, y], i) => (
-        <motion.circle
-          key={i}
-          cx={x}
-          cy={y}
-          r="3"
-          fill={i % 2 === 0 ? color : accent}
-          initial={{ scale: 0 }}
-          animate={{ scale: [0, 1.2, 1] }}
-          transition={{ duration: 0.6, delay: 0.3 + i * 0.12 }}
-        />
+        <circle key={i} cx={x} cy={y} r={size * 0.05} fill={i % 2 === 0 ? stroke : accent} />
       ))}
     </svg>
   );
 }
 
-function BenzeneRing({ size = 70 }: { size?: number }) {
+/**
+ * Methane-like tetrahedron projection: central atom with 4 bonds to outer atoms.
+ */
+function Tetra({ size = 80, opacity = 0.5 }: { size?: number; opacity?: number }) {
   const r = size / 2;
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <motion.circle
-        cx={r}
-        cy={r}
-        r={r * 0.55}
-        fill="none"
-        stroke="#93A5CF"
-        strokeWidth="1"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1, rotate: 360 }}
-        transition={{
-          pathLength: { duration: 2, ease: "easeInOut" },
-          rotate: { duration: 30, repeat: Infinity, ease: "linear" },
-        }}
-      />
-      <motion.circle
-        cx={r}
-        cy={r}
-        r={r * 0.42}
-        fill="none"
-        stroke="#93A5CF"
-        strokeWidth="0.6"
-        strokeDasharray="3 3"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.5, rotate: -360 }}
-        transition={{
-          opacity: { duration: 1.5, delay: 1 },
-          rotate: { duration: 40, repeat: Infinity, ease: "linear" },
-        }}
-        style={{ transformOrigin: "center" }}
-      />
-    </svg>
-  );
-}
-
-function ChainMolecule({ width = 160 }: { width?: number }) {
-  const points = [
-    [10, 30], [40, 10], [70, 30], [100, 10], [130, 30], [150, 50],
+  const cx = r, cy = r;
+  const arms = [
+    [cx, cy - r * 0.78],
+    [cx + r * 0.7, cy + r * 0.35],
+    [cx - r * 0.7, cy + r * 0.35],
+    [cx, cy + r * 0.78],
   ];
   return (
-    <svg width={width} height="60" viewBox={`0 0 ${width} 60`}>
-      <motion.polyline
-        points={points.map((p) => p.join(",")).join(" ")}
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ opacity }}>
+      {arms.map(([x, y], i) => (
+        <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#2D4A46" strokeWidth={size * 0.022} strokeLinecap="round" />
+      ))}
+      {arms.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={size * 0.07} fill="#B0C4B1" />
+      ))}
+      <circle cx={cx} cy={cy} r={size * 0.1} fill="#2D4A46" />
+    </svg>
+  );
+}
+
+/**
+ * Carbon chain (alkane skeleton).
+ */
+function Chain({ width = 160, opacity = 0.45 }: { width?: number; opacity?: number }) {
+  const pts = [[8, 36], [40, 12], [72, 36], [104, 12], [136, 36], [168, 12]];
+  return (
+    <svg width={width} height="48" viewBox="0 0 176 48" style={{ opacity }}>
+      <polyline
+        points={pts.map((p) => p.join(",")).join(" ")}
         fill="none"
         stroke="#2D4A46"
-        strokeWidth="1.2"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 2, ease: "easeInOut" }}
       />
-      {points.map(([x, y], i) => (
-        <motion.circle
-          key={i}
-          cx={x}
-          cy={y}
-          r="3.5"
-          fill={i === 0 || i === points.length - 1 ? "#B0C4B1" : "#2D4A46"}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.2 + i * 0.15 }}
-        />
+      {pts.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r="3.5" fill={i === 0 || i === pts.length - 1 ? "#B0C4B1" : "#2D4A46"} />
       ))}
     </svg>
   );
 }
 
+/**
+ * Performance-conscious floating molecules layer.
+ * - Few items (8 total)
+ * - Only translate3d + rotate transforms (GPU-composited)
+ * - `will-change: transform` hint
+ * - `prefers-reduced-motion` respected
+ */
 function FloatingMolecules() {
-  const items = [
-    { kind: "hex", top: "8%", left: "6%", size: 90, drift: 18, dur: 14 },
-    { kind: "benzene", top: "22%", right: "8%", size: 80, drift: 22, dur: 17 },
-    { kind: "chain", top: "55%", left: "4%", size: 160, drift: 16, dur: 20 },
-    { kind: "hex", top: "72%", right: "5%", size: 110, drift: 25, dur: 19 },
-    { kind: "benzene", top: "120%", left: "10%", size: 70, drift: 20, dur: 16 },
-    { kind: "hex", top: "150%", right: "12%", size: 95, drift: 18, dur: 22 },
-    { kind: "chain", top: "180%", left: "8%", size: 140, drift: 24, dur: 18 },
-    { kind: "benzene", top: "210%", right: "6%", size: 100, drift: 22, dur: 21 },
-    { kind: "hex", top: "240%", left: "14%", size: 75, drift: 16, dur: 15 },
-    { kind: "benzene", top: "275%", right: "10%", size: 85, drift: 20, dur: 19 },
-    { kind: "chain", top: "310%", left: "6%", size: 150, drift: 18, dur: 23 },
-    { kind: "hex", top: "345%", right: "8%", size: 95, drift: 22, dur: 17 },
-  ] as const;
+  type Item = {
+    kind: "benzene" | "cyclo" | "tetra" | "chain";
+    top: string;
+    side: "left" | "right";
+    offset: string;
+    size: number;
+    drift: number;
+    dur: number;
+    delay: number;
+  };
+  const items: Item[] = [
+    { kind: "benzene", top: "12%",  side: "left",  offset: "5%",  size: 110, drift: 14, dur: 18, delay: 0 },
+    { kind: "cyclo",   top: "26%",  side: "right", offset: "6%",  size: 90,  drift: 12, dur: 22, delay: 1.5 },
+    { kind: "chain",   top: "58%",  side: "left",  offset: "3%",  size: 170, drift: 16, dur: 20, delay: 0.8 },
+    { kind: "tetra",   top: "78%",  side: "right", offset: "4%",  size: 100, drift: 14, dur: 24, delay: 2 },
+    { kind: "benzene", top: "118%", side: "left",  offset: "8%",  size: 80,  drift: 12, dur: 19, delay: 0.4 },
+    { kind: "cyclo",   top: "168%", side: "right", offset: "7%",  size: 120, drift: 16, dur: 23, delay: 1.2 },
+    { kind: "tetra",   top: "228%", side: "left",  offset: "5%",  size: 90,  drift: 12, dur: 21, delay: 0.6 },
+    { kind: "benzene", top: "298%", side: "right", offset: "6%",  size: 100, drift: 14, dur: 25, delay: 1.8 },
+  ];
 
   return (
     <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden">
       {items.map((it, i) => (
         <motion.div
           key={i}
-          className="absolute opacity-50"
+          className="absolute"
           style={{
             top: it.top,
-            left: "left" in it ? it.left : undefined,
-            right: "right" in it ? it.right : undefined,
-          }}
+            [it.side]: it.offset,
+            willChange: "transform",
+            transform: "translateZ(0)",
+          } as React.CSSProperties}
           animate={{
-            y: [0, -it.drift, 0, it.drift, 0],
-            rotate: [0, 6, 0, -6, 0],
+            y: [0, -it.drift, 0],
+            rotate: it.kind === "chain" ? [0, 2, 0] : [0, 8, 0],
           }}
           transition={{
             duration: it.dur,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: i * 0.4,
+            delay: it.delay,
           }}
         >
-          {it.kind === "hex" && <HexMolecule size={it.size} />}
-          {it.kind === "benzene" && <BenzeneRing size={it.size} />}
-          {it.kind === "chain" && <ChainMolecule width={it.size} />}
+          {it.kind === "benzene" && <Benzene size={it.size} />}
+          {it.kind === "cyclo" && <Cyclo size={it.size} />}
+          {it.kind === "tetra" && <Tetra size={it.size} />}
+          {it.kind === "chain" && <Chain width={it.size} />}
         </motion.div>
       ))}
     </div>
   );
 }
 
-function ConnectingLines() {
+/**
+ * Hero molecular network — soft, slowly-animated bond lattice behind the centered hero text.
+ */
+function HeroMoleculeBackdrop() {
+  const nodes = [
+    [120, 80], [240, 130], [360, 70], [480, 140], [600, 90], [720, 150], [840, 80],
+    [180, 240], [300, 280], [420, 220], [540, 290], [660, 230], [780, 290],
+    [120, 380], [260, 420], [400, 360], [540, 430], [680, 380], [820, 430],
+  ];
+  const edges: [number, number][] = [
+    [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6],
+    [0, 7], [1, 8], [2, 9], [3, 10], [4, 11], [5, 12],
+    [7, 13], [8, 14], [9, 15], [10, 16], [11, 17], [12, 18],
+    [7, 8], [9, 10], [11, 12],
+    [13, 14], [15, 16], [17, 18],
+  ];
   return (
     <svg
-      className="absolute inset-0 w-full h-full pointer-events-none opacity-30"
-      preserveAspectRatio="none"
-      viewBox="0 0 1000 1000"
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      viewBox="0 0 960 500"
+      preserveAspectRatio="xMidYMid slice"
+      style={{ opacity: 0.35 }}
     >
       <defs>
-        <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#2D4A46" stopOpacity="0" />
-          <stop offset="50%" stopColor="#2D4A46" stopOpacity="0.4" />
+        <radialGradient id="hero-fade" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#2D4A46" stopOpacity="0.6" />
           <stop offset="100%" stopColor="#2D4A46" stopOpacity="0" />
-        </linearGradient>
+        </radialGradient>
       </defs>
-      {[
-        "M 50 100 Q 300 200 500 150 T 950 250",
-        "M 100 400 Q 400 350 600 500 T 900 550",
-        "M 50 700 Q 350 800 600 750 T 950 850",
-      ].map((d, i) => (
-        <motion.path
-          key={i}
-          d={d}
-          fill="none"
-          stroke="url(#lineGrad)"
-          strokeWidth="1"
-          strokeDasharray="4 6"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 4, delay: i * 0.6, ease: "easeInOut" }}
+      <rect width="960" height="500" fill="url(#hero-fade)" />
+      {edges.map(([a, b], i) => (
+        <motion.line
+          key={`e-${i}`}
+          x1={nodes[a][0]} y1={nodes[a][1]}
+          x2={nodes[b][0]} y2={nodes[b][1]}
+          stroke="#2D4A46"
+          strokeWidth="0.8"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 0.5 }}
+          transition={{ duration: 2, delay: i * 0.04, ease: "easeOut" }}
+        />
+      ))}
+      {nodes.map(([x, y], i) => (
+        <motion.circle
+          key={`n-${i}`}
+          cx={x} cy={y}
+          r={i % 4 === 0 ? 3.5 : 2.2}
+          fill={i % 4 === 0 ? "#2D4A46" : "#B0C4B1"}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 + i * 0.04 }}
+        />
+      ))}
+      {/* Slow pulsing accent atoms */}
+      {[[480, 140], [420, 220], [540, 290]].map(([x, y], i) => (
+        <motion.circle
+          key={`p-${i}`}
+          cx={x} cy={y}
+          r="6"
+          fill="#2D4A46"
+          opacity={0.2}
+          animate={{ scale: [1, 2.2, 1], opacity: [0.2, 0, 0.2] }}
+          transition={{ duration: 4, repeat: Infinity, delay: i * 1.2, ease: "easeInOut" }}
         />
       ))}
     </svg>
@@ -326,10 +354,17 @@ function NavBar() {
 
 function HeroSection() {
   return (
-    <section className="pt-32 pb-16 md:pt-40 md:pb-24 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
-      <div className="flex-1 max-w-2xl">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+    <section className="relative pt-32 pb-16 md:pt-40 md:pb-24 px-6">
+      {/* Molecular network backdrop, centered */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-full max-w-5xl h-full">
+          <HeroMoleculeBackdrop />
+        </div>
+      </div>
+
+      <div className="relative max-w-4xl mx-auto flex flex-col items-center text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#B0C4B1]/20 border border-[#B0C4B1]/40 text-[#2D4A46] text-xs font-semibold tracking-wide uppercase mb-6"
@@ -337,61 +372,61 @@ function HeroSection() {
           <span className="w-2 h-2 rounded-full bg-[#2D4A46] animate-pulse" />
           Chemical Intelligence Platform
         </motion.div>
-        
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
+
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="font-serif text-5xl md:text-7xl font-medium tracking-tight text-[#1E293B] leading-[1.1] mb-6"
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="font-serif text-5xl md:text-7xl font-medium tracking-tight text-[#1E293B] leading-[1.05] mb-6"
         >
-          Powering Chemical <br/>
-          <span className="text-[#2D4A46] italic">Intelligence</span> <br/>
+          Powering Chemical{" "}
+          <span className="text-[#2D4A46] italic">Intelligence</span>{" "}
           Through Data.
         </motion.h1>
 
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-lg text-[#64748B] mb-8 max-w-lg leading-relaxed"
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="text-lg md:text-xl text-[#64748B] mb-10 max-w-2xl leading-relaxed"
         >
           Transform raw chemical market data into actionable strategic foresight. Uncover supply chain shifts, track pricing trends, and anticipate market movements with precision.
         </motion.p>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-wrap items-center gap-4"
+          transition={{ duration: 0.7, delay: 0.3 }}
+          className="flex flex-wrap items-center justify-center gap-4 mb-16"
         >
-          <button className="px-6 py-3.5 rounded-xl bg-[#2D4A46] text-white font-medium hover:bg-[#1E3330] transition-all shadow-lg shadow-[#2D4A46]/20 flex items-center gap-2 group">
+          <button className="px-6 py-3.5 rounded-xl bg-[#2D4A46] text-white font-medium hover:bg-[#1E3330] transition-colors shadow-lg shadow-[#2D4A46]/20 flex items-center gap-2 group">
             Explore Platform <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
-          <button className="px-6 py-3.5 rounded-xl bg-white border border-[#E2E8F0] text-[#1E293B] font-medium hover:bg-[#F1F5F9] transition-all flex items-center gap-2">
+          <button className="px-6 py-3.5 rounded-xl bg-white border border-[#E2E8F0] text-[#1E293B] font-medium hover:bg-[#F1F5F9] transition-colors">
             View Live Demo
           </button>
         </motion.div>
-      </div>
 
-      <div className="flex-1 w-full grid grid-cols-2 gap-4">
-        {[
-          { label: "Data Points", value: "450M+", suffix: "Processed Daily" },
-          { label: "Market Coverage", value: "98%", suffix: "Global Chemical Sector" },
-          { label: "Prediction Accuracy", value: "94.2%", suffix: "AI Forecast Rate" },
-          { label: "Active Suppliers", value: "12,000+", suffix: "Vetted & Monitored" }
-        ].map((stat, i) => (
-          <motion.div 
-            key={i}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 + (i * 0.1) }}
-            className="p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="text-3xl md:text-4xl font-serif font-medium text-[#2D4A46] mb-2">{stat.value}</div>
-            <div className="text-sm font-semibold text-[#1E293B] mb-1">{stat.label}</div>
-            <div className="text-xs text-[#64748B]">{stat.suffix}</div>
-          </motion.div>
-        ))}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-5xl">
+          {[
+            { label: "Data Points", value: "450M+", suffix: "Processed Daily" },
+            { label: "Market Coverage", value: "98%", suffix: "Global Chemical Sector" },
+            { label: "Prediction Accuracy", value: "94.2%", suffix: "AI Forecast Rate" },
+            { label: "Active Suppliers", value: "12,000+", suffix: "Vetted & Monitored" }
+          ].map((stat, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 + i * 0.08 }}
+              className="p-5 md:p-6 rounded-2xl bg-white/90 backdrop-blur-sm border border-[#E2E8F0] shadow-sm hover:shadow-md transition-shadow text-left"
+            >
+              <div className="text-3xl md:text-4xl font-serif font-medium text-[#2D4A46] mb-1.5">{stat.value}</div>
+              <div className="text-sm font-semibold text-[#1E293B] mb-0.5">{stat.label}</div>
+              <div className="text-xs text-[#64748B]">{stat.suffix}</div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
