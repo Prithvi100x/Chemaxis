@@ -568,17 +568,17 @@ function AboutSection() {
   ];
 
   return (
-    <section className="py-24 px-6 max-w-7xl mx-auto" id="about">
-      <div className="grid md:grid-cols-2 gap-16 items-center">
+    <section className="py-16 sm:py-24 px-5 sm:px-6 max-w-7xl mx-auto" id="about">
+      <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
         <div>
-          <h2 className="font-serif text-3xl md:text-4xl font-medium text-[var(--ca-fg)] mb-6">
+          <h2 className="font-serif text-[1.75rem] leading-tight sm:text-3xl md:text-4xl font-medium text-[var(--ca-fg)] mb-5 sm:mb-6">
             The nervous system of the <span className="text-[var(--ca-primary)] italic">chemical supply chain</span>.
           </h2>
-          <p className="text-[var(--ca-muted)] text-lg leading-relaxed mb-10">
+          <p className="text-[var(--ca-muted)] text-base sm:text-lg leading-relaxed mb-8 sm:mb-10">
             We built ChemAxis because generic data tools don't understand chemistry. Our platform is designed specifically for the complexities of molecular supply chains, giving procurement teams and analysts the exact instrumentation they need.
           </p>
           
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
             {pillars.map((pillar, i) => (
               <div key={i} className="flex flex-col gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[rgb(var(--ca-sage-rgb)/0.20)] text-[var(--ca-primary)] flex items-center justify-center">
@@ -653,11 +653,11 @@ function ServicesSection() {
   ];
 
   return (
-    <div className="py-24 px-8 lg:px-16 border-r border-[rgb(var(--ca-border-rgb)/0.60)] bg-[var(--ca-surface)]" id="services">
-      <h3 className="font-serif text-3xl font-medium text-[var(--ca-fg)] mb-4">Core Capabilities</h3>
-      <p className="text-[var(--ca-muted)] mb-12 max-w-md">Comprehensive tooling for the modern chemical procurement organization.</p>
+    <div className="py-16 sm:py-24 px-5 sm:px-8 lg:px-16 lg:border-r border-[rgb(var(--ca-border-rgb)/0.60)] bg-[var(--ca-surface)]" id="services">
+      <h3 className="font-serif text-2xl sm:text-3xl font-medium text-[var(--ca-fg)] mb-3 sm:mb-4">Core Capabilities</h3>
+      <p className="text-[var(--ca-muted)] mb-8 sm:mb-12 max-w-md text-sm sm:text-base">Comprehensive tooling for the modern chemical procurement organization.</p>
       
-      <div className="grid sm:grid-cols-2 gap-6">
+      <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
         {services.map((service, i) => (
           <motion.div 
             key={i}
@@ -681,14 +681,14 @@ function ServicesSection() {
 
 function DataShowcaseSection() {
   return (
-    <div className="py-24 px-8 lg:px-16 bg-[var(--ca-bg)]" id="data">
+    <div className="py-16 sm:py-24 px-5 sm:px-8 lg:px-16 bg-[var(--ca-bg)]" id="data">
       <div className="max-w-xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h3 className="font-serif text-3xl font-medium text-[var(--ca-fg)] mb-2">Live Instrumentation</h3>
-            <p className="text-[var(--ca-muted)]">Real-time feed example</p>
+        <div className="flex items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8">
+          <div className="min-w-0">
+            <h3 className="font-serif text-2xl sm:text-3xl font-medium text-[var(--ca-fg)] mb-1 sm:mb-2">Live Instrumentation</h3>
+            <p className="text-[var(--ca-muted)] text-sm sm:text-base">Real-time feed example</p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--ca-surface)] border border-[var(--ca-border)] text-xs font-mono text-[var(--ca-primary)]">
+          <div className="shrink-0 flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--ca-surface)] border border-[var(--ca-border)] text-[10px] sm:text-xs font-mono text-[var(--ca-primary)]">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             SYS_ONLINE
           </div>
@@ -703,17 +703,17 @@ function DataShowcaseSection() {
             <div className="ml-4 text-xs font-mono text-[var(--ca-muted)]">benzene_index_eur.dat</div>
           </div>
           
-          <div className="p-6">
-            <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
               {[
                 { label: "Spot Price", val: "$1,142/MT", delta: "+2.4%" },
                 { label: "Vol (30d)", val: "42.1K MT", delta: "-1.2%" },
                 { label: "Forecast (Q3)", val: "$1,180/MT", delta: "+3.3%" }
               ].map((k, i) => (
-                <div key={i} className="p-4 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)]">
-                  <div className="text-xs text-[var(--ca-muted)] mb-1">{k.label}</div>
-                  <div className="font-serif text-xl font-medium text-[var(--ca-fg)]">{k.val}</div>
-                  <div className={`text-xs font-medium mt-1 ${k.delta.startsWith('+') ? 'text-green-600' : 'text-red-500'}`}>
+                <div key={i} className="p-3 sm:p-4 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] min-w-0">
+                  <div className="text-[10px] sm:text-xs text-[var(--ca-muted)] mb-1 truncate">{k.label}</div>
+                  <div className="font-serif text-sm sm:text-xl font-medium text-[var(--ca-fg)] tracking-tight">{k.val}</div>
+                  <div className={`text-[10px] sm:text-xs font-medium mt-1 ${k.delta.startsWith('+') ? 'text-green-600' : 'text-red-500'}`}>
                     {k.delta}
                   </div>
                 </div>
@@ -753,12 +753,12 @@ function DataShowcaseSection() {
                 { name: "Antwerp Storage", status: "Maintenance", fill: "30%" },
                 { name: "Houston Port", status: "Congested", fill: "95%" }
               ].map((p, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-[var(--ca-border)] text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${p.status === 'Online' ? 'bg-green-500' : p.status === 'Maintenance' ? 'bg-yellow-500' : 'bg-red-500'}`} />
-                    <span className="font-medium text-[var(--ca-fg)]">{p.name}</span>
+                <div key={i} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-[var(--ca-border)] text-xs sm:text-sm">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div className={`shrink-0 w-2 h-2 rounded-full ${p.status === 'Online' ? 'bg-green-500' : p.status === 'Maintenance' ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                    <span className="font-medium text-[var(--ca-fg)] truncate">{p.name}</span>
                   </div>
-                  <div className="flex items-center gap-4 w-1/3">
+                  <div className="flex items-center gap-2 sm:gap-4 w-24 sm:w-1/3 shrink-0">
                     <div className="flex-1 h-1.5 rounded-full bg-[var(--ca-border)] overflow-hidden">
                       <motion.div 
                         className="h-full bg-[var(--ca-primary)]"
@@ -767,7 +767,7 @@ function DataShowcaseSection() {
                         transition={{ duration: 1, delay: 0.5 }}
                       />
                     </div>
-                    <span className="font-mono text-xs text-[var(--ca-muted)]">{p.fill}</span>
+                    <span className="font-mono text-[10px] sm:text-xs text-[var(--ca-muted)]">{p.fill}</span>
                   </div>
                 </div>
               ))}
@@ -787,14 +787,14 @@ function CaseStudiesSection() {
   ];
 
   return (
-    <section className="py-24 px-6 bg-[var(--ca-surface)]" id="cases">
+    <section className="py-16 sm:py-24 px-5 sm:px-6 bg-[var(--ca-surface)]" id="cases">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="font-serif text-3xl md:text-4xl font-medium text-[var(--ca-fg)] mb-4">Proven Impact</h2>
-          <p className="text-[var(--ca-muted)] max-w-2xl mx-auto">How leading chemical enterprises use ChemAxis to drive bottom-line results.</p>
+        <div className="text-center mb-10 sm:mb-16">
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-[var(--ca-fg)] mb-3 sm:mb-4">Proven Impact</h2>
+          <p className="text-[var(--ca-muted)] text-sm sm:text-base max-w-2xl mx-auto">How leading chemical enterprises use ChemAxis to drive bottom-line results.</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
           {cases.map((c, i) => (
             <motion.div 
               key={i}
@@ -805,7 +805,7 @@ function CaseStudiesSection() {
               className="flex flex-col bg-[var(--ca-bg)] rounded-2xl border border-[var(--ca-border)] overflow-hidden hover:shadow-lg transition-shadow"
             >
               <div className="h-2 bg-[var(--ca-sage)]" />
-              <div className="p-8 flex-1 flex flex-col">
+              <div className="p-6 sm:p-8 flex-1 flex flex-col">
                 <div className="text-xs font-bold tracking-wider text-[var(--ca-muted)] uppercase mb-4">{c.brand}</div>
                 <p className="text-[var(--ca-fg)] leading-relaxed mb-8 flex-1">{c.desc}</p>
                 <div className="pt-6 border-t border-[var(--ca-border)]">
@@ -823,18 +823,18 @@ function CaseStudiesSection() {
 
 function ContactSection() {
   return (
-    <section className="py-24 px-6 bg-[var(--ca-bg)] border-t border-[var(--ca-border)]" id="contact">
-      <div className="max-w-3xl mx-auto bg-[var(--ca-surface)] rounded-3xl p-8 md:p-12 border border-[var(--ca-border)] shadow-xl shadow-[rgb(var(--ca-lavender-rgb)/0.05)] relative overflow-hidden">
+    <section className="py-16 sm:py-24 px-5 sm:px-6 bg-[var(--ca-bg)] border-t border-[var(--ca-border)]" id="contact">
+      <div className="max-w-3xl mx-auto bg-[var(--ca-surface)] rounded-3xl p-6 sm:p-8 md:p-12 border border-[var(--ca-border)] shadow-xl shadow-[rgb(var(--ca-lavender-rgb)/0.05)] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[rgb(var(--ca-sage-rgb)/0.10)] rounded-full blur-[80px]" />
         
         <div className="relative z-10">
-          <div className="text-center mb-10">
-            <h2 className="font-serif text-3xl font-medium text-[var(--ca-fg)] mb-3">Request Platform Access</h2>
-            <p className="text-[var(--ca-muted)]">ChemAxis is currently available for enterprise procurement teams. Submit your details for a tailored demonstration.</p>
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[var(--ca-fg)] mb-2 sm:mb-3">Request Platform Access</h2>
+            <p className="text-[var(--ca-muted)] text-sm sm:text-base">ChemAxis is currently available for enterprise procurement teams. Submit your details for a tailored demonstration.</p>
           </div>
 
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-            <div className="grid md:grid-cols-2 gap-6">
+          <form className="space-y-5 sm:space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[var(--ca-fg)]">Full Name</label>
                 <input type="text" className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all" placeholder="Jane Doe" />
@@ -845,7 +845,7 @@ function ContactSection() {
               </div>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[var(--ca-fg)]">Company</label>
                 <input type="text" className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all" placeholder="Organization Name" />
@@ -880,8 +880,8 @@ function ContactSection() {
 
 function Footer() {
   return (
-    <footer className="bg-[var(--ca-surface)] border-t border-[var(--ca-border)] py-12 px-6">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+    <footer className="bg-[var(--ca-surface)] border-t border-[var(--ca-border)] py-10 sm:py-12 px-5 sm:px-6">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:justify-between gap-6 text-center md:text-left">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-[var(--ca-primary)] flex items-center justify-center text-white">
             <Network size={14} />
@@ -891,13 +891,13 @@ function Footer() {
           </span>
         </div>
         
-        <div className="flex items-center gap-6 text-sm text-[var(--ca-muted)]">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:gap-6 text-xs sm:text-sm text-[var(--ca-muted)]">
           <a href="#" className="hover:text-[var(--ca-primary)]">Privacy Policy</a>
           <a href="#" className="hover:text-[var(--ca-primary)]">Terms of Service</a>
           <a href="#" className="hover:text-[var(--ca-primary)]">API Documentation</a>
         </div>
         
-        <div className="text-sm text-[var(--ca-muted-soft)]">
+        <div className="text-xs sm:text-sm text-[var(--ca-muted-soft)]">
           &copy; {new Date().getFullYear()} ChemAxis Intelligence. All rights reserved.
         </div>
       </div>
