@@ -232,19 +232,21 @@ function FloatingMolecules() {
     dur: number;
     delay: number;
   };
+  // Positioned in the outer gutters so they never overlap centered hero content.
+  // Hidden on small screens to avoid crowding mobile layout.
   const items: Item[] = [
-    { kind: "benzene", top: "12%",  side: "left",  offset: "5%",  size: 110, drift: 14, dur: 18, delay: 0 },
-    { kind: "cyclo",   top: "26%",  side: "right", offset: "6%",  size: 90,  drift: 12, dur: 22, delay: 1.5 },
-    { kind: "chain",   top: "58%",  side: "left",  offset: "3%",  size: 170, drift: 16, dur: 20, delay: 0.8 },
-    { kind: "tetra",   top: "78%",  side: "right", offset: "4%",  size: 100, drift: 14, dur: 24, delay: 2 },
-    { kind: "benzene", top: "118%", side: "left",  offset: "8%",  size: 80,  drift: 12, dur: 19, delay: 0.4 },
-    { kind: "cyclo",   top: "168%", side: "right", offset: "7%",  size: 120, drift: 16, dur: 23, delay: 1.2 },
-    { kind: "tetra",   top: "228%", side: "left",  offset: "5%",  size: 90,  drift: 12, dur: 21, delay: 0.6 },
-    { kind: "benzene", top: "298%", side: "right", offset: "6%",  size: 100, drift: 14, dur: 25, delay: 1.8 },
+    { kind: "benzene", top: "6%",   side: "left",  offset: "2%",  size: 92,  drift: 12, dur: 18, delay: 0 },
+    { kind: "cyclo",   top: "18%",  side: "right", offset: "3%",  size: 82,  drift: 12, dur: 22, delay: 1.5 },
+    { kind: "chain",   top: "62%",  side: "left",  offset: "1%",  size: 150, drift: 14, dur: 20, delay: 0.8 },
+    { kind: "tetra",   top: "80%",  side: "right", offset: "2%",  size: 90,  drift: 14, dur: 24, delay: 2 },
+    { kind: "benzene", top: "120%", side: "left",  offset: "3%",  size: 78,  drift: 12, dur: 19, delay: 0.4 },
+    { kind: "cyclo",   top: "172%", side: "right", offset: "3%",  size: 110, drift: 14, dur: 23, delay: 1.2 },
+    { kind: "tetra",   top: "232%", side: "left",  offset: "2%",  size: 84,  drift: 12, dur: 21, delay: 0.6 },
+    { kind: "benzene", top: "302%", side: "right", offset: "3%",  size: 92,  drift: 14, dur: 25, delay: 1.8 },
   ];
 
   return (
-    <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden hidden md:block">
       {items.map((it, i) => (
         <motion.div
           key={i}
