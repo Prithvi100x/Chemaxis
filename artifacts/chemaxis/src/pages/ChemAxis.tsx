@@ -591,27 +591,43 @@ function AboutSection() {
           </div>
         </div>
 
-        <div className="relative aspect-square md:aspect-[4/3] rounded-3xl bg-[var(--ca-surface)] border border-[var(--ca-border)] shadow-xl shadow-[rgb(var(--ca-lavender-rgb)/0.10)] overflow-hidden flex items-center justify-center">
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--ca-bg)] to-white" />
+        <div className="relative aspect-[4/3] md:aspect-square lg:aspect-[5/4] max-h-[28rem] md:max-h-none w-full rounded-3xl bg-[var(--ca-surface)] border border-[var(--ca-border)] shadow-xl shadow-[rgb(var(--ca-lavender-rgb)/0.10)] overflow-hidden flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--ca-sage-rgb)/0.10)] via-[var(--ca-bg)] to-[rgb(var(--ca-lavender-rgb)/0.08)]" />
           
+          {/* Subtle dot grid texture */}
+          <svg className="absolute inset-0 w-full h-full opacity-50" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="aboutDots" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1" fill="var(--ca-sage)" opacity="0.35" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#aboutDots)" />
+          </svg>
+
           {/* Animated Molecule Structure */}
-          <svg className="w-3/4 h-3/4 relative z-10" viewBox="0 0 200 200">
+          <svg className="w-3/4 h-3/4 max-w-sm relative z-10" viewBox="0 0 200 200">
+            {/* Soft halo behind */}
+            <circle cx="100" cy="100" r="78" fill="var(--ca-primary)" opacity="0.06" />
             <motion.path 
               d="M100 50 L150 80 L150 140 L100 170 L50 140 L50 80 Z" 
               fill="none" 
-              stroke={`var(--ca-border)`} 
-              strokeWidth="2"
+              stroke="var(--ca-primary)" 
+              strokeWidth="2.5"
+              strokeOpacity="0.85"
               initial={{ pathLength: 0 }}
               whileInView={{ pathLength: 1 }}
+              viewport={{ once: true }}
               transition={{ duration: 2, ease: "easeInOut" }}
             />
             <motion.path 
               d="M100 50 L100 20 M150 80 L180 65 M150 140 L180 155 M100 170 L100 190 M50 140 L20 155 M50 80 L20 65" 
               fill="none" 
-              stroke={`var(--ca-border)`} 
+              stroke="var(--ca-sage)" 
               strokeWidth="2"
+              strokeOpacity="0.9"
               initial={{ pathLength: 0 }}
               whileInView={{ pathLength: 1 }}
+              viewport={{ once: true }}
               transition={{ duration: 1.5, delay: 1, ease: "easeInOut" }}
             />
             
@@ -619,10 +635,13 @@ function AboutSection() {
             {[[100,50], [150,80], [150,140], [100,170], [50,140], [50,80]].map((pos, i) => (
               <motion.circle 
                 key={i}
-                cx={pos[0]} cy={pos[1]} r="6" 
+                cx={pos[0]} cy={pos[1]} r="7" 
                 fill={i === 0 ? "var(--ca-primary)" : "var(--ca-sage)"}
+                stroke="var(--ca-bg)"
+                strokeWidth="2"
                 initial={{ scale: 0 }}
                 whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.2 * i }}
               />
             ))}
@@ -630,10 +649,12 @@ function AboutSection() {
             {[[100,20], [180,65], [180,155], [100,190], [20,155], [20,65]].map((pos, i) => (
               <motion.circle 
                 key={`outer-${i}`}
-                cx={pos[0]} cy={pos[1]} r="4" 
-                fill={`var(--ca-muted-soft)`}
+                cx={pos[0]} cy={pos[1]} r="4.5" 
+                fill="var(--ca-primary)"
+                fillOpacity="0.55"
                 initial={{ scale: 0 }}
                 whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 1.5 + (0.1 * i) }}
               />
             ))}
