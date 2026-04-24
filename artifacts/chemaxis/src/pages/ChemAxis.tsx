@@ -65,10 +65,83 @@ function ThemeToggle({ className = "" }: { className?: string }) {
   );
 }
 
+/**
+ * Self-contained theme tokens injected as a <style> block so this component
+ * renders correctly in standalone environments (e.g. the mockup sandbox)
+ * that don't load the chemaxis app's index.css.
+ */
+const CHEMAXIS_THEME_CSS = `
+.ca-light {
+  --ca-bg: #FAFAF8;
+  --ca-surface: #FFFFFF;
+  --ca-surface-2: #F8FAFC;
+  --ca-elevate: #F1F5F9;
+  --ca-fg: #1E293B;
+  --ca-fg-strong: #0F172A;
+  --ca-muted: #64748B;
+  --ca-muted-strong: #475569;
+  --ca-muted-soft: #94A3B8;
+  --ca-border: #E2E8F0;
+  --ca-grid: #E2E8F0;
+  --ca-primary: #2D4A46;
+  --ca-primary-hover: #1E3330;
+  --ca-on-primary: #FFFFFF;
+  --ca-sage: #B0C4B1;
+  --ca-lavender: #93A5CF;
+  --ca-bg-rgb: 250 250 248;
+  --ca-surface-rgb: 255 255 255;
+  --ca-fg-rgb: 30 41 59;
+  --ca-border-rgb: 226 232 240;
+  --ca-primary-rgb: 45 74 70;
+  --ca-sage-rgb: 176 196 177;
+  --ca-lavender-rgb: 147 165 207;
+}
+.ca-dark {
+  --ca-bg: #0A1614;
+  --ca-surface: #11201E;
+  --ca-surface-2: #0E1B19;
+  --ca-elevate: #16282A;
+  --ca-fg: #ECEEEB;
+  --ca-fg-strong: #F8FAF6;
+  --ca-muted: #94A3B8;
+  --ca-muted-strong: #C5CFD8;
+  --ca-muted-soft: #6E7C8A;
+  --ca-border: #1E2D2B;
+  --ca-grid: #1B2A28;
+  --ca-primary: #4A7068;
+  --ca-primary-hover: #5C8A82;
+  --ca-on-primary: #FFFFFF;
+  --ca-sage: #B0C4B1;
+  --ca-lavender: #93A5CF;
+  --ca-bg-rgb: 10 22 20;
+  --ca-surface-rgb: 17 32 30;
+  --ca-fg-rgb: 236 238 235;
+  --ca-border-rgb: 30 45 43;
+  --ca-primary-rgb: 74 112 104;
+  --ca-sage-rgb: 176 196 177;
+  --ca-lavender-rgb: 147 165 207;
+}
+.ca-theme-root, .ca-theme-root * {
+  transition: background-color 350ms ease, border-color 350ms ease, color 350ms ease, fill 350ms ease, stroke 350ms ease, box-shadow 350ms ease;
+}
+.ca-theme-root .ca-no-theme-transition, .ca-theme-root .ca-no-theme-transition * {
+  transition: none !important;
+}
+@keyframes caShimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+@keyframes caGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(74, 112, 104, 0); }
+  50%      { box-shadow: 0 0 24px rgba(74, 112, 104, 0.35); }
+}
+`;
+
 export function ChemAxis() {
   const themeApi = useChemAxisTheme();
   return (
     <ThemeContext.Provider value={themeApi}>
+    <style>{CHEMAXIS_THEME_CSS}</style>
     <div className={`ca-theme-root ${themeApi.theme === "dark" ? "ca-dark" : "ca-light"} min-h-screen w-full bg-[var(--ca-bg)] text-[var(--ca-fg)] font-sans selection:bg-[var(--ca-primary)] selection:text-white overflow-hidden relative`}>
       {/* Static grid background — no animation, GPU friendly */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-30">
