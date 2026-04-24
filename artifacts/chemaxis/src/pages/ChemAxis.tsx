@@ -235,14 +235,14 @@ function FloatingMolecules() {
   // Positioned in the outer gutters so they never overlap centered hero content.
   // Hidden on small screens to avoid crowding mobile layout.
   const items: Item[] = [
-    { kind: "benzene", top: "6%",   side: "left",  offset: "2%",  size: 92,  drift: 12, dur: 18, delay: 0 },
-    { kind: "cyclo",   top: "18%",  side: "right", offset: "3%",  size: 82,  drift: 12, dur: 22, delay: 1.5 },
-    { kind: "chain",   top: "62%",  side: "left",  offset: "1%",  size: 150, drift: 14, dur: 20, delay: 0.8 },
-    { kind: "tetra",   top: "80%",  side: "right", offset: "2%",  size: 90,  drift: 14, dur: 24, delay: 2 },
-    { kind: "benzene", top: "120%", side: "left",  offset: "3%",  size: 78,  drift: 12, dur: 19, delay: 0.4 },
-    { kind: "cyclo",   top: "172%", side: "right", offset: "3%",  size: 110, drift: 14, dur: 23, delay: 1.2 },
-    { kind: "tetra",   top: "232%", side: "left",  offset: "2%",  size: 84,  drift: 12, dur: 21, delay: 0.6 },
-    { kind: "benzene", top: "302%", side: "right", offset: "3%",  size: 92,  drift: 14, dur: 25, delay: 1.8 },
+    { kind: "benzene", top: "6%",   side: "left",  offset: "2%",  size: 92,  drift: 26, dur: 7,  delay: 0 },
+    { kind: "cyclo",   top: "18%",  side: "right", offset: "3%",  size: 82,  drift: 24, dur: 8,  delay: 0.6 },
+    { kind: "chain",   top: "62%",  side: "left",  offset: "1%",  size: 150, drift: 22, dur: 9,  delay: 0.4 },
+    { kind: "tetra",   top: "80%",  side: "right", offset: "2%",  size: 90,  drift: 28, dur: 7.5, delay: 1.2 },
+    { kind: "benzene", top: "120%", side: "left",  offset: "3%",  size: 78,  drift: 24, dur: 8,  delay: 0.2 },
+    { kind: "cyclo",   top: "172%", side: "right", offset: "3%",  size: 110, drift: 26, dur: 9,  delay: 0.8 },
+    { kind: "tetra",   top: "232%", side: "left",  offset: "2%",  size: 84,  drift: 22, dur: 7,  delay: 0.4 },
+    { kind: "benzene", top: "302%", side: "right", offset: "3%",  size: 92,  drift: 28, dur: 8.5, delay: 1.0 },
   ];
 
   return (
@@ -258,8 +258,10 @@ function FloatingMolecules() {
             transform: "translateZ(0)",
           } as React.CSSProperties}
           animate={{
-            y: [0, -it.drift, 0],
-            rotate: it.kind === "chain" ? [0, 2, 0] : [0, 8, 0],
+            y: [0, -it.drift, 4, -it.drift * 0.6, 0],
+            x: [0, it.side === "left" ? 10 : -10, 0, it.side === "left" ? -6 : 6, 0],
+            rotate: it.kind === "chain" ? [0, 4, -2, 3, 0] : [0, 14, -8, 10, 0],
+            scale: [1, 1.05, 0.98, 1.03, 1],
           }}
           transition={{
             duration: it.dur,
@@ -273,6 +275,43 @@ function FloatingMolecules() {
           {it.kind === "tetra" && <Tetra size={it.size} />}
           {it.kind === "chain" && <Chain width={it.size} />}
         </motion.div>
+      ))}
+
+      {/* Drifting accent atoms — soft glowing dots that float across the page */}
+      {[
+        { top: "8%",   side: "right" as const, offset: "12%", color: "var(--ca-primary)", size: 6,  dur: 6,   delay: 0 },
+        { top: "32%",  side: "left" as const,  offset: "14%", color: "var(--ca-sage)",    size: 8,  dur: 7,   delay: 1.5 },
+        { top: "70%",  side: "right" as const, offset: "9%",  color: "var(--ca-lavender)", size: 5,  dur: 5.5, delay: 0.8 },
+        { top: "140%", side: "left" as const,  offset: "10%", color: "var(--ca-primary)", size: 7,  dur: 6.5, delay: 0.3 },
+        { top: "200%", side: "right" as const, offset: "12%", color: "var(--ca-sage)",    size: 6,  dur: 7,   delay: 1.1 },
+        { top: "270%", side: "left" as const,  offset: "8%",  color: "var(--ca-lavender)", size: 8,  dur: 5,   delay: 0.5 },
+      ].map((a, i) => (
+        <motion.span
+          key={`atom-${i}`}
+          className="absolute rounded-full"
+          style={{
+            top: a.top,
+            [a.side]: a.offset,
+            width: a.size,
+            height: a.size,
+            background: a.color,
+            boxShadow: `0 0 ${a.size * 3}px ${a.color}`,
+            opacity: 0.6,
+            willChange: "transform, opacity",
+          } as React.CSSProperties}
+          animate={{
+            y: [0, -40, 0, 30, 0],
+            x: [0, a.side === "left" ? 18 : -18, 0, a.side === "left" ? -10 : 10, 0],
+            opacity: [0.5, 0.95, 0.4, 0.85, 0.5],
+            scale: [1, 1.4, 1, 1.2, 1],
+          }}
+          transition={{
+            duration: a.dur,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: a.delay,
+          }}
+        />
       ))}
     </div>
   );
@@ -487,8 +526,9 @@ function HeroSection() {
               key={i}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -4, scale: 1.02 }}
               transition={{ duration: 0.5, delay: 0.4 + i * 0.08 }}
-              className="p-5 md:p-6 rounded-2xl bg-[var(--ca-surface)]/90 backdrop-blur-sm border border-[var(--ca-border)] shadow-sm hover:shadow-md transition-shadow text-left"
+              className="p-5 md:p-6 rounded-2xl bg-[var(--ca-surface)]/90 backdrop-blur-sm border border-[var(--ca-border)] shadow-sm hover:shadow-lg hover:border-[var(--ca-sage)] hover:shadow-[rgb(var(--ca-primary-rgb)/0.15)] transition-all text-left cursor-default"
             >
               <div className="text-3xl md:text-4xl font-serif font-medium text-[var(--ca-primary)] mb-1.5">{stat.value}</div>
               <div className="text-sm font-semibold text-[var(--ca-fg)] mb-0.5">{stat.label}</div>
@@ -686,11 +726,12 @@ function ServicesSection() {
             key={i}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -6 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: i * 0.1 }}
-            className="p-6 rounded-2xl bg-[var(--ca-bg)] border border-[var(--ca-border)] hover:border-[var(--ca-sage)] hover:shadow-md transition-all group cursor-pointer"
+            className="p-6 rounded-2xl bg-[var(--ca-bg)] border border-[var(--ca-border)] hover:border-[var(--ca-sage)] hover:shadow-xl hover:shadow-[rgb(var(--ca-primary-rgb)/0.12)] transition-all group cursor-pointer"
           >
-            <div className="w-12 h-12 rounded-xl bg-[var(--ca-surface)] border border-[var(--ca-border)] flex items-center justify-center text-[var(--ca-primary)] mb-5 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-[var(--ca-surface)] border border-[var(--ca-border)] flex items-center justify-center text-[var(--ca-primary)] mb-5 group-hover:scale-110 group-hover:rotate-6 group-hover:bg-[rgb(var(--ca-sage-rgb)/0.20)] transition-all duration-500">
               {React.cloneElement(service.icon, { size: 24 })}
             </div>
             <h4 className="text-lg font-semibold text-[var(--ca-fg)] mb-2">{service.title}</h4>
@@ -823,11 +864,12 @@ function CaseStudiesSection() {
               key={i}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -8, scale: 1.015 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="flex flex-col bg-[var(--ca-bg)] rounded-2xl border border-[var(--ca-border)] overflow-hidden hover:shadow-lg transition-shadow"
+              className="flex flex-col bg-[var(--ca-bg)] rounded-2xl border border-[var(--ca-border)] overflow-hidden hover:shadow-2xl hover:shadow-[rgb(var(--ca-primary-rgb)/0.15)] hover:border-[var(--ca-sage)] transition-all group"
             >
-              <div className="h-2 bg-[var(--ca-sage)]" />
+              <div className="h-2 bg-gradient-to-r from-[var(--ca-sage)] via-[var(--ca-primary)] to-[var(--ca-sage)] bg-[length:200%_100%] animate-[caShimmer_3s_linear_infinite]" />
               <div className="p-6 sm:p-8 flex-1 flex flex-col">
                 <div className="text-xs font-bold tracking-wider text-[var(--ca-muted)] uppercase mb-4">{c.brand}</div>
                 <p className="text-[var(--ca-fg)] leading-relaxed mb-8 flex-1">{c.desc}</p>

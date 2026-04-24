@@ -463,3 +463,15 @@
 .ca-theme-root .ca-no-theme-transition * {
   transition: none !important;
 }
+
+/* Shimmer animation for accent strips */
+@keyframes caShimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* Soft floating animation for icon glyphs */
+@keyframes caGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(74, 112, 104, 0); }
+  50%      { box-shadow: 0 0 24px rgba(74, 112, 104, 0.35); }
+}
