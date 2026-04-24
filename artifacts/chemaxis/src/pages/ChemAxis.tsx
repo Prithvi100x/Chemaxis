@@ -215,15 +215,169 @@ function Chain({ width = 160, opacity = 0.45 }: { width?: number; opacity?: numb
 }
 
 /**
+ * Erlenmeyer (conical) flask with liquid that gently sloshes via SVG animation.
+ */
+function Flask({ size = 90, opacity = 0.6 }: { size?: number; opacity?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ opacity }}>
+      <defs>
+        <clipPath id={`flask-clip-${size}`}>
+          {/* Flask interior shape */}
+          <path d="M 42 18 L 42 38 L 22 78 Q 20 88 30 88 L 70 88 Q 80 88 78 78 L 58 38 L 58 18 Z" />
+        </clipPath>
+        <linearGradient id={`flask-liquid-${size}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--ca-sage)" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="var(--ca-primary)" stopOpacity="0.95" />
+        </linearGradient>
+      </defs>
+      {/* Liquid (clipped to flask shape) with slow sway */}
+      <g clipPath={`url(#flask-clip-${size})`}>
+        <rect x="15" y="56" width="80" height="40" fill={`url(#flask-liquid-${size})`}>
+          <animateTransform attributeName="transform" type="translate" values="-4 0; 4 0; -4 0" dur="3.5s" repeatCount="indefinite" />
+        </rect>
+        {/* Bubbles rising */}
+        {[
+          { cx: 38, r: 1.8, dur: 4 },
+          { cx: 50, r: 2.2, dur: 5 },
+          { cx: 62, r: 1.5, dur: 3.5 },
+        ].map((b, i) => (
+          <circle key={i} cx={b.cx} cy="86" r={b.r} fill="white" fillOpacity="0.6">
+            <animate attributeName="cy" values="86;58;86" dur={`${b.dur}s`} repeatCount="indefinite" begin={`${i * 0.7}s`} />
+            <animate attributeName="opacity" values="0;1;0" dur={`${b.dur}s`} repeatCount="indefinite" begin={`${i * 0.7}s`} />
+          </circle>
+        ))}
+      </g>
+      {/* Flask outline */}
+      <path d="M 42 18 L 42 38 L 22 78 Q 20 88 30 88 L 70 88 Q 80 88 78 78 L 58 38 L 58 18" fill="none" stroke="var(--ca-primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Neck rim */}
+      <line x1="38" y1="18" x2="62" y2="18" stroke="var(--ca-primary)" strokeWidth="2.5" strokeLinecap="round" />
+      {/* Volume tick marks */}
+      <line x1="68" y1="62" x2="74" y2="62" stroke="var(--ca-primary)" strokeWidth="1" strokeOpacity="0.6" />
+      <line x1="70" y1="72" x2="74" y2="72" stroke="var(--ca-primary)" strokeWidth="1" strokeOpacity="0.6" />
+    </svg>
+  );
+}
+
+/**
+ * Lab beaker with a liquid surface and a wisp of vapor.
+ */
+function Beaker({ size = 90, opacity = 0.6 }: { size?: number; opacity?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ opacity }}>
+      <defs>
+        <clipPath id={`beaker-clip-${size}`}>
+          <path d="M 26 26 L 26 82 Q 26 90 34 90 L 66 90 Q 74 90 74 82 L 74 26 Z" />
+        </clipPath>
+        <linearGradient id={`beaker-liquid-${size}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--ca-lavender)" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="var(--ca-primary)" stopOpacity="0.9" />
+        </linearGradient>
+      </defs>
+      {/* Liquid */}
+      <g clipPath={`url(#beaker-clip-${size})`}>
+        <rect x="20" y="52" width="60" height="42" fill={`url(#beaker-liquid-${size})`} />
+        {/* Wave on top of liquid */}
+        <path d="M 20 54 Q 35 48 50 54 T 80 54 L 80 60 L 20 60 Z" fill="var(--ca-sage)" fillOpacity="0.5">
+          <animate attributeName="d"
+            values="M 20 54 Q 35 48 50 54 T 80 54 L 80 60 L 20 60 Z;
+                    M 20 54 Q 35 60 50 54 T 80 54 L 80 60 L 20 60 Z;
+                    M 20 54 Q 35 48 50 54 T 80 54 L 80 60 L 20 60 Z"
+            dur="3s" repeatCount="indefinite" />
+        </path>
+      </g>
+      {/* Vapor wisps */}
+      <path d="M 40 22 Q 38 14 42 8" fill="none" stroke="var(--ca-sage)" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.5">
+        <animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" repeatCount="indefinite" />
+      </path>
+      <path d="M 56 22 Q 60 14 56 6" fill="none" stroke="var(--ca-sage)" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.5">
+        <animate attributeName="stroke-opacity" values="0.2;0.7;0.2" dur="3s" repeatCount="indefinite" begin="1s" />
+      </path>
+      {/* Beaker outline */}
+      <path d="M 22 24 L 78 24 M 26 26 L 26 82 Q 26 90 34 90 L 66 90 Q 74 90 74 82 L 74 26"
+        fill="none" stroke="var(--ca-primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Spout */}
+      <path d="M 22 24 L 18 28" fill="none" stroke="var(--ca-primary)" strokeWidth="2" strokeLinecap="round" />
+      {/* Tick marks */}
+      <line x1="68" y1="56" x2="74" y2="56" stroke="var(--ca-primary)" strokeWidth="1" strokeOpacity="0.6" />
+      <line x1="70" y1="68" x2="74" y2="68" stroke="var(--ca-primary)" strokeWidth="1" strokeOpacity="0.6" />
+      <line x1="68" y1="80" x2="74" y2="80" stroke="var(--ca-primary)" strokeWidth="1" strokeOpacity="0.6" />
+    </svg>
+  );
+}
+
+/**
+ * Test tube with reactive liquid inside.
+ */
+function TestTube({ size = 80, opacity = 0.6 }: { size?: number; opacity?: number }) {
+  return (
+    <svg width={size} height={size * 1.4} viewBox="0 0 60 84" style={{ opacity }}>
+      <defs>
+        <clipPath id={`tt-clip-${size}`}>
+          <path d="M 18 8 L 18 64 Q 18 78 30 78 Q 42 78 42 64 L 42 8 Z" />
+        </clipPath>
+        <linearGradient id={`tt-liquid-${size}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--ca-primary)" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="var(--ca-sage)" stopOpacity="0.95" />
+        </linearGradient>
+      </defs>
+      <g clipPath={`url(#tt-clip-${size})`}>
+        <rect x="14" y="42" width="32" height="42" fill={`url(#tt-liquid-${size})`} />
+        {/* Reaction bubbles */}
+        {[
+          { cx: 24, dur: 3 },
+          { cx: 30, dur: 4 },
+          { cx: 36, dur: 3.5 },
+        ].map((b, i) => (
+          <circle key={i} cx={b.cx} cy="74" r="1.6" fill="white" fillOpacity="0.7">
+            <animate attributeName="cy" values="74;46;74" dur={`${b.dur}s`} repeatCount="indefinite" begin={`${i * 0.5}s`} />
+            <animate attributeName="opacity" values="0;1;0" dur={`${b.dur}s`} repeatCount="indefinite" begin={`${i * 0.5}s`} />
+          </circle>
+        ))}
+      </g>
+      {/* Tube outline */}
+      <path d="M 18 8 L 18 64 Q 18 78 30 78 Q 42 78 42 64 L 42 8" fill="none" stroke="var(--ca-primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {/* Rim */}
+      <rect x="14" y="4" width="32" height="6" rx="2" fill="none" stroke="var(--ca-primary)" strokeWidth="2" />
+    </svg>
+  );
+}
+
+/**
+ * Atom — nucleus with two crossed elliptical orbits and an orbiting electron.
+ */
+function Atom({ size = 90, opacity = 0.6 }: { size?: number; opacity?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ opacity }}>
+      {/* Orbit ellipses (rotated for 3D feel) */}
+      <ellipse cx="50" cy="50" rx="42" ry="16" fill="none" stroke="var(--ca-primary)" strokeWidth="1.6" strokeOpacity="0.85" />
+      <ellipse cx="50" cy="50" rx="42" ry="16" fill="none" stroke="var(--ca-sage)" strokeWidth="1.6" strokeOpacity="0.85" transform="rotate(60 50 50)" />
+      <ellipse cx="50" cy="50" rx="42" ry="16" fill="none" stroke="var(--ca-lavender)" strokeWidth="1.6" strokeOpacity="0.85" transform="rotate(-60 50 50)" />
+      {/* Nucleus glow */}
+      <circle cx="50" cy="50" r="9" fill="var(--ca-primary)" fillOpacity="0.15" />
+      <circle cx="50" cy="50" r="5" fill="var(--ca-primary)" />
+      {/* Electron orbiting along the first ellipse */}
+      <circle r="3" fill="var(--ca-sage)">
+        <animateMotion dur="4s" repeatCount="indefinite"
+          path="M 92 50 A 42 16 0 1 1 8 50 A 42 16 0 1 1 92 50" />
+      </circle>
+      <circle r="2.5" fill="var(--ca-lavender)">
+        <animateMotion dur="5s" repeatCount="indefinite" rotate="auto"
+          path="M 71 13 A 42 16 0 1 1 29 87 A 42 16 0 1 1 71 13" />
+      </circle>
+    </svg>
+  );
+}
+
+/**
  * Performance-conscious floating molecules layer.
- * - Few items (8 total)
+ * - Mix of chemistry glyphs (molecules + lab equipment + atom)
  * - Only translate3d + rotate transforms (GPU-composited)
  * - `will-change: transform` hint
  * - `prefers-reduced-motion` respected
  */
 function FloatingMolecules() {
   type Item = {
-    kind: "benzene" | "cyclo" | "tetra" | "chain";
+    kind: "benzene" | "cyclo" | "tetra" | "chain" | "flask" | "beaker" | "testtube" | "atom";
     top: string;
     side: "left" | "right";
     offset: string;
@@ -233,16 +387,25 @@ function FloatingMolecules() {
     delay: number;
   };
   // Positioned in the outer gutters so they never overlap centered hero content.
+  // Mix of molecules + lab equipment + atom for visual variety.
   // Hidden on small screens to avoid crowding mobile layout.
   const items: Item[] = [
-    { kind: "benzene", top: "6%",   side: "left",  offset: "2%",  size: 92,  drift: 26, dur: 7,  delay: 0 },
-    { kind: "cyclo",   top: "18%",  side: "right", offset: "3%",  size: 82,  drift: 24, dur: 8,  delay: 0.6 },
-    { kind: "chain",   top: "62%",  side: "left",  offset: "1%",  size: 150, drift: 22, dur: 9,  delay: 0.4 },
-    { kind: "tetra",   top: "80%",  side: "right", offset: "2%",  size: 90,  drift: 28, dur: 7.5, delay: 1.2 },
-    { kind: "benzene", top: "120%", side: "left",  offset: "3%",  size: 78,  drift: 24, dur: 8,  delay: 0.2 },
-    { kind: "cyclo",   top: "172%", side: "right", offset: "3%",  size: 110, drift: 26, dur: 9,  delay: 0.8 },
-    { kind: "tetra",   top: "232%", side: "left",  offset: "2%",  size: 84,  drift: 22, dur: 7,  delay: 0.4 },
-    { kind: "benzene", top: "302%", side: "right", offset: "3%",  size: 92,  drift: 28, dur: 8.5, delay: 1.0 },
+    { kind: "benzene",  top: "5%",   side: "left",  offset: "2%",  size: 92,  drift: 26, dur: 7,   delay: 0   },
+    { kind: "flask",    top: "16%",  side: "right", offset: "2.5%", size: 92, drift: 22, dur: 8,   delay: 0.5 },
+    { kind: "atom",     top: "34%",  side: "left",  offset: "3%",  size: 96,  drift: 24, dur: 9,   delay: 0.3 },
+    { kind: "testtube", top: "44%",  side: "right", offset: "3%",  size: 70,  drift: 26, dur: 7.5, delay: 1.0 },
+    { kind: "chain",    top: "62%",  side: "left",  offset: "1%",  size: 150, drift: 22, dur: 9,   delay: 0.4 },
+    { kind: "beaker",   top: "76%",  side: "right", offset: "2%",  size: 96,  drift: 24, dur: 8,   delay: 1.2 },
+    { kind: "cyclo",    top: "92%",  side: "left",  offset: "2%",  size: 82,  drift: 24, dur: 8,   delay: 0.6 },
+    { kind: "tetra",    top: "112%", side: "right", offset: "3%",  size: 86,  drift: 28, dur: 7.5, delay: 0.9 },
+    { kind: "flask",    top: "138%", side: "left",  offset: "3%",  size: 78,  drift: 22, dur: 8.5, delay: 0.2 },
+    { kind: "atom",     top: "162%", side: "right", offset: "2%",  size: 88,  drift: 26, dur: 9,   delay: 0.7 },
+    { kind: "beaker",   top: "188%", side: "left",  offset: "2%",  size: 80,  drift: 24, dur: 8,   delay: 1.1 },
+    { kind: "benzene",  top: "212%", side: "right", offset: "3%",  size: 86,  drift: 26, dur: 7,   delay: 0.4 },
+    { kind: "testtube", top: "238%", side: "left",  offset: "2%",  size: 64,  drift: 22, dur: 8,   delay: 0.8 },
+    { kind: "cyclo",    top: "262%", side: "right", offset: "3%",  size: 96,  drift: 26, dur: 9,   delay: 1.0 },
+    { kind: "atom",     top: "288%", side: "left",  offset: "2%",  size: 78,  drift: 24, dur: 8,   delay: 0.3 },
+    { kind: "flask",    top: "312%", side: "right", offset: "2.5%", size: 86, drift: 28, dur: 8.5, delay: 1.4 },
   ];
 
   return (
@@ -260,7 +423,12 @@ function FloatingMolecules() {
           animate={{
             y: [0, -it.drift, 4, -it.drift * 0.6, 0],
             x: [0, it.side === "left" ? 10 : -10, 0, it.side === "left" ? -6 : 6, 0],
-            rotate: it.kind === "chain" ? [0, 4, -2, 3, 0] : [0, 14, -8, 10, 0],
+            rotate:
+              it.kind === "chain"
+                ? [0, 4, -2, 3, 0]
+                : it.kind === "flask" || it.kind === "beaker" || it.kind === "testtube"
+                ? [0, 5, -4, 4, 0]
+                : [0, 14, -8, 10, 0],
             scale: [1, 1.05, 0.98, 1.03, 1],
           }}
           transition={{
@@ -274,6 +442,10 @@ function FloatingMolecules() {
           {it.kind === "cyclo" && <Cyclo size={it.size} />}
           {it.kind === "tetra" && <Tetra size={it.size} />}
           {it.kind === "chain" && <Chain width={it.size} />}
+          {it.kind === "flask" && <Flask size={it.size} />}
+          {it.kind === "beaker" && <Beaker size={it.size} />}
+          {it.kind === "testtube" && <TestTube size={it.size} />}
+          {it.kind === "atom" && <Atom size={it.size} />}
         </motion.div>
       ))}
 
