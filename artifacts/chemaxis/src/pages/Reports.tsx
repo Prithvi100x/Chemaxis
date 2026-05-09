@@ -16,9 +16,9 @@ export default function Reports() {
   useEffect(() => {
     api.reports.list()
       .then(setReports)
+      .catch(() => {})
       .finally(() => setLoading(false));
-    if (user) api.seed();
-  }, [user]);
+  }, []);
 
   const filtered = reports.filter(r => {
     const q = search.toLowerCase();

@@ -20,12 +20,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    try {
-      const u = await api.auth.me();
-      setUser(u);
-    } catch {
-      setUser(null);
-    }
+    const u = await api.auth.me();
+    setUser(u);
   }, []);
 
   useEffect(() => {

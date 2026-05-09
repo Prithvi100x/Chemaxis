@@ -22,7 +22,11 @@ router.post("/auth/register", async (req, res) => {
     req.session.userId = user.id;
     req.session.userName = user.name;
     req.session.userEmail = user.email;
-    res.json({ id: user.id, name: user.name, email: user.email, company: user.company });
+    req.session.save((saveErr) => {
+      if (saveErr) req.log.error({ err: saveErr }, "Session save error");
+      res.json({ id: user.id, name: user.name, email: user.email, company: user.company });
+    });
+    return;
   } catch (err) {
     req.log.error({ err }, "Register error");
     res.status(500).json({ error: "Registration failed" });
@@ -49,7 +53,11 @@ router.post("/auth/login", async (req, res) => {
     req.session.userId = user.id;
     req.session.userName = user.name;
     req.session.userEmail = user.email;
-    res.json({ id: user.id, name: user.name, email: user.email, company: user.company });
+    req.session.save((saveErr) => {
+      if (saveErr) req.log.error({ err: saveErr }, "Session save error");
+      res.json({ id: user.id, name: user.name, email: user.email, company: user.company });
+    });
+    return;
   } catch (err) {
     req.log.error({ err }, "Login error");
     res.status(500).json({ error: "Login failed" });

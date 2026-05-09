@@ -38,6 +38,7 @@ export default function MyReports() {
         setReports([...gens].reverse());
         setPurchases(new Set(purch.map(p => p.reportId)));
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [user]);
 

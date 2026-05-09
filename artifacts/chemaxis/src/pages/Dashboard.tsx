@@ -34,6 +34,7 @@ export default function Dashboard() {
     if (!user) return;
     Promise.all([api.generate.myReports(), api.purchase.list()])
       .then(([r, p]) => { setMyReports(r); setPurchases(p); })
+      .catch(() => {})
       .finally(() => setDataLoading(false));
   }, [user]);
 

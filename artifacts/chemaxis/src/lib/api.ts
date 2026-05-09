@@ -13,6 +13,20 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function requestMaybeNull<T>(path: string, opts: RequestInit = {}): Promise<T | null> {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { "Content-Type": "application/json", ...(opts.headers ?? {}) },
+    credentials: "include",
+    ...opts,
+  });
+  if (res.status === 401 || res.status === 403) return null;
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export type User = { id: number; name: string; email: string; company?: string };
 export type Report = {
   id: number; title: string; description: string; category: string;
@@ -29,7 +43,7 @@ export type Purchase = { id: number; reportId: number; amountCents: number; stat
 
 export const api = {
   auth: {
-    me: () => request<User>("/auth/me"),
+    me: () => requestMaybeNull<User>("/auth/me"),
     login: (email: string, password: string) => request<User>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
     register: (name: string, email: string, password: string, company?: string) =>
       request<User>("/auth/register", { method: "POST", body: JSON.stringify({ name, email, password, company }) }),
@@ -55,5 +69,5 @@ export const api = {
       }),
     list: () => request<Purchase[]>("/purchases"),
   },
-  seed: () => request<{ ok: boolean; message: string }>("/seed", { method: "POST" }),
+  seed: () => requestMaybeNull<{ ok: boolean; message: string }>("/seed", { method: "POST" }),
 };

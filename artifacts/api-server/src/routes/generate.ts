@@ -75,7 +75,7 @@ Write the full report in ${targetLangName}. Be specific with numbers and percent
     req.log.error({ err }, "Generate report error");
     await db.update(generatedReportsTable)
       .set({ status: "error" })
-      .where(eq(generatedReportsTable.userId, userId));
+      .where(eq(generatedReportsTable.id, gen.id));
   }
 });
 

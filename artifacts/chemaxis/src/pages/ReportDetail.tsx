@@ -42,13 +42,22 @@ export default function ReportDetail() {
     setError(""); setGenerating(true);
     try {
       const { id: genId } = await api.generate.start(id, targetLang, customNotes);
-      pollRef.current = setInterval(async () => {
-        const g = await api.generate.get(genId);
-        setGenReport(g);
-        if (g.status === "done" || g.status === "error") {
-          clearInterval(pollRef.current!); setGenerating(false);
+
+      const poll = async () => {
+        try {
+          const g = await api.generate.get(genId);
+          setGenReport(g);
+          if (g.status === "done" || g.status === "error") {
+            if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+            setGenerating(false);
+          }
+        } catch {
+          // ignore transient poll errors
         }
-      }, 3000);
+      };
+
+      await poll();
+      pollRef.current = setInterval(poll, 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
       setGenerating(false);
