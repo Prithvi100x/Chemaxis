@@ -166,6 +166,7 @@ export function ChemAxis() {
           <ServicesSection />
           <DataShowcaseSection />
         </div>
+        <DataReportsSection />
         <CaseStudiesSection />
         <ContactSection />
         <Footer />
@@ -656,20 +657,20 @@ function NavBar() {
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          {["About", "Services", "Data", "Cases"].map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-[var(--ca-muted)] hover:text-[var(--ca-primary)] transition-colors">
-              {item}
+          {[{ label: "About", href: "#about" }, { label: "Reports", href: "/reports" }, { label: "Services", href: "#services" }, { label: "Cases", href: "#cases" }].map((item) => (
+            <a key={item.label} href={item.href} className="text-sm font-medium text-[var(--ca-muted)] hover:text-[var(--ca-primary)] transition-colors">
+              {item.label}
             </a>
           ))}
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <button className="text-sm font-medium text-[var(--ca-fg)] hover:text-[var(--ca-primary)] transition-colors">
+          <a href="/login" className="text-sm font-medium text-[var(--ca-fg)] hover:text-[var(--ca-primary)] transition-colors">
             Sign In
-          </button>
-          <button className="px-5 py-2.5 rounded-lg bg-[var(--ca-primary)] text-white text-sm font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-sm shadow-[rgb(var(--ca-primary-rgb)/0.20)]">
-            Request Access
-          </button>
+          </a>
+          <a href="/register" className="px-5 py-2.5 rounded-lg bg-[var(--ca-primary)] text-white text-sm font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-sm shadow-[rgb(var(--ca-primary-rgb)/0.20)]">
+            Get Started Free
+          </a>
           <ThemeToggle />
         </div>
 
@@ -689,15 +690,14 @@ function NavBar() {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-full left-0 right-0 bg-[var(--ca-bg)] border-b border-[var(--ca-border)] p-6 flex flex-col gap-4 shadow-xl md:hidden"
           >
-            {["About", "Services", "Data", "Cases"].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="text-lg font-medium text-[var(--ca-fg)]" onClick={() => setMobileMenuOpen(false)}>
-                {item}
+            {[{ label: "About", href: "#about" }, { label: "Reports", href: "/reports" }, { label: "Services", href: "#services" }, { label: "Cases", href: "#cases" }].map((item) => (
+              <a key={item.label} href={item.href} className="text-lg font-medium text-[var(--ca-fg)]" onClick={() => setMobileMenuOpen(false)}>
+                {item.label}
               </a>
             ))}
             <div className="h-px bg-[var(--ca-border)] my-2" />
-            <button className="w-full py-3 rounded-lg bg-[var(--ca-primary)] text-white font-medium">
-              Request Access
-            </button>
+            <a href="/login" className="text-center py-3 rounded-lg border border-[var(--ca-border)] text-[var(--ca-fg)] font-medium">Sign In</a>
+            <a href="/register" className="text-center py-3 rounded-lg bg-[var(--ca-primary)] text-white font-medium">Get Started Free</a>
           </motion.div>
         )}
       </AnimatePresence>
@@ -743,7 +743,7 @@ function HeroSection() {
           transition={{ duration: 0.7, delay: 0.2 }}
           className="text-base sm:text-lg md:text-xl text-[var(--ca-muted)] mb-8 sm:mb-10 max-w-2xl leading-relaxed px-1"
         >
-          Transform raw chemical market data into actionable strategic foresight. Uncover supply chain shifts, track pricing trends, and anticipate market movements with precision.
+          Get AI-powered chemical market reports. We translate Chinese market data into clear English reports — ready to download as PDF in minutes.
         </motion.p>
 
         <motion.div
@@ -752,12 +752,12 @@ function HeroSection() {
           transition={{ duration: 0.7, delay: 0.3 }}
           className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 mb-12 sm:mb-16 w-full sm:w-auto max-w-xs sm:max-w-none"
         >
-          <button className="px-6 py-3.5 rounded-xl bg-[var(--ca-primary)] text-white font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-lg shadow-[rgb(var(--ca-primary-rgb)/0.20)] flex items-center justify-center gap-2 group">
-            Explore Platform <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-          </button>
-          <button className="px-6 py-3.5 rounded-xl bg-[var(--ca-surface)] border border-[var(--ca-border)] text-[var(--ca-fg)] font-medium hover:bg-[var(--ca-elevate)] transition-colors flex items-center justify-center">
-            View Live Demo
-          </button>
+          <a href="/reports" className="px-6 py-3.5 rounded-xl bg-[var(--ca-primary)] text-white font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-lg shadow-[rgb(var(--ca-primary-rgb)/0.20)] flex items-center justify-center gap-2 group">
+            Browse Reports <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+          </a>
+          <a href="/register" className="px-6 py-3.5 rounded-xl bg-[var(--ca-surface)] border border-[var(--ca-border)] text-[var(--ca-fg)] font-medium hover:bg-[var(--ca-elevate)] transition-colors flex items-center justify-center">
+            Create Free Account
+          </a>
         </motion.div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-5xl">
@@ -862,7 +862,7 @@ function AboutSection() {
             The nervous system of the <span className="text-[var(--ca-primary)] italic">chemical supply chain</span>.
           </h2>
           <p className="text-[var(--ca-muted)] text-base sm:text-lg leading-relaxed mb-8 sm:mb-10">
-            We built ChemAxis because generic data tools don't understand chemistry. Our platform is designed specifically for the complexities of molecular supply chains, giving procurement teams and analysts the exact instrumentation they need.
+            ChemAxis collects raw Chinese chemical market data that most analysts can't read or access, then converts it into clear, structured reports in your language. We do the sourcing. AI does the writing. You get the insights.
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
@@ -1125,6 +1125,65 @@ function CaseStudiesSection() {
               </div>
             </motion.div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DataReportsSection() {
+  const steps = [
+    { num: "01", title: "Pick a Report", desc: "Browse our library of chemical market reports sourced from primary Chinese industry data." },
+    { num: "02", title: "AI Generates It for You", desc: "Our AI reads the raw data, translates it into your chosen language, and writes a clear structured report." },
+    { num: "03", title: "Pay & Download PDF", desc: "Pay once per report. Get a clean, professional PDF you can share with your team instantly." },
+  ];
+  const features = [
+    { icon: "🌏", title: "Chinese → Any Language", desc: "Primary Chinese market data translated into English, Arabic, German, French, or more." },
+    { icon: "🤖", title: "AI-Written Analysis", desc: "Not just a translation — the AI writes proper sections: price forecast, supply/demand, regional breakdown, risks." },
+    { icon: "📄", title: "Professional PDF", desc: "Download a clean, branded PDF report ready to share in meetings or send to your team." },
+    { icon: "💰", title: "Pay Per Report", desc: "No monthly subscriptions. Buy just the reports you need, starting from $35." },
+  ];
+
+  return (
+    <section className="py-16 sm:py-24 px-5 sm:px-6 bg-[var(--ca-bg)] border-t border-[var(--ca-border)]" id="data-reports">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-12 sm:mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgb(var(--ca-sage-rgb)/0.20)] border border-[rgb(var(--ca-sage-rgb)/0.40)] text-[var(--ca-primary)] text-xs font-semibold tracking-wide uppercase mb-4">
+            Data Reports
+          </div>
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-[var(--ca-fg)] mb-4">
+            Get chemical reports in your language
+          </h2>
+          <p className="text-[var(--ca-muted)] text-sm sm:text-base max-w-2xl mx-auto">
+            We source hard-to-find data from Chinese chemical markets, then use AI to translate and generate a full report — customized to your focus areas.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-6 sm:gap-8 mb-14">
+          {steps.map((s) => (
+            <div key={s.num} className="flex flex-col items-center text-center p-6 rounded-2xl border border-[var(--ca-border)] bg-[var(--ca-surface)]">
+              <div className="w-12 h-12 rounded-xl bg-[var(--ca-primary)] text-white font-bold text-lg flex items-center justify-center mb-4">{s.num}</div>
+              <h3 className="font-bold text-[var(--ca-fg)] mb-2">{s.title}</h3>
+              <p className="text-[var(--ca-muted)] text-sm leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5 mb-12">
+          {features.map((f) => (
+            <div key={f.title} className="p-5 rounded-2xl border border-[var(--ca-border)] bg-[var(--ca-surface)] hover:border-[var(--ca-sage)] transition-colors">
+              <div className="text-2xl mb-3">{f.icon}</div>
+              <h4 className="font-bold text-[var(--ca-fg)] text-sm mb-1.5">{f.title}</h4>
+              <p className="text-[var(--ca-muted)] text-xs leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <a href="/reports" className="inline-flex items-center gap-2 px-8 py-4 bg-[var(--ca-primary)] text-white font-semibold rounded-xl hover:bg-[var(--ca-primary-hover)] transition-colors shadow-lg shadow-[rgb(var(--ca-primary-rgb)/0.20)] text-sm">
+            Browse All Reports <ArrowRight size={16} />
+          </a>
+          <p className="text-[var(--ca-muted)] text-xs mt-3">No subscription. Pay only for reports you need.</p>
         </div>
       </div>
     </section>
