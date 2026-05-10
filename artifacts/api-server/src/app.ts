@@ -12,6 +12,10 @@ const PgSession = connectPgSimple(session);
 
 const app: Express = express();
 
+// Trust Replit's reverse proxy so req.secure works correctly
+// and express-session sets the cookie on HTTPS connections
+app.set("trust proxy", 1);
+
 app.use(
   pinoHttp({
     logger,
@@ -43,10 +47,10 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : "lax",
     },
   }),
 );

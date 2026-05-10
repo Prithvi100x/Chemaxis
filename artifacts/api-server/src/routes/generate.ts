@@ -11,22 +11,23 @@ router.post("/reports/:id/generate", requireAuth, async (req, res) => {
   const userId = req.session!.userId!;
   const { targetLanguage = "en", customNotes = "" } = req.body;
 
+  const [report] = await db.select().from(reportsTable).where(eq(reportsTable.id, reportId)).limit(1);
+  if (!report) {
+    res.status(404).json({ error: "Report not found" });
+    return;
+  }
+
+  const [gen] = await db.insert(generatedReportsTable).values({
+    userId,
+    reportId,
+    targetLanguage,
+    customNotes,
+    status: "processing",
+  }).returning();
+
+  res.json({ id: gen.id, status: "processing" });
+
   try {
-    const [report] = await db.select().from(reportsTable).where(eq(reportsTable.id, reportId)).limit(1);
-    if (!report) {
-      res.status(404).json({ error: "Report not found" });
-      return;
-    }
-
-    const [gen] = await db.insert(generatedReportsTable).values({
-      userId,
-      reportId,
-      targetLanguage,
-      customNotes,
-      status: "processing",
-    }).returning();
-
-    res.json({ id: gen.id, status: "processing" });
 
     const langLabel: Record<string, string> = { en: "English", zh: "Chinese", ar: "Arabic", de: "German", fr: "French" };
     const targetLangName = langLabel[targetLanguage] ?? targetLanguage;
