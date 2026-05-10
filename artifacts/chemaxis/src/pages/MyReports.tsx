@@ -64,7 +64,7 @@ export default function MyReports() {
       <div className="max-w-4xl mx-auto px-6 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-[#1E293B] mb-1">My Reports</h1>
-          <p className="text-[#64748B] text-sm">All your generated and purchased reports are here.</p>
+          <p className="text-[#64748B] text-sm">All your reports are listed here. Click "Download PDF" to save a report to your device.</p>
         </div>
 
         {loading ? (
@@ -73,7 +73,7 @@ export default function MyReports() {
           <div className="py-20 text-center bg-white rounded-2xl border border-[#E2E8F0]">
             <FileText className="w-12 h-12 text-[#CBD5E1] mx-auto mb-3" />
             <h3 className="font-bold text-[#1E293B] mb-2">No reports yet</h3>
-            <p className="text-[#64748B] text-sm mb-6">Browse our library and generate your first AI report.</p>
+            <p className="text-[#64748B] text-sm mb-6">Browse our reports and order your first one — it only takes a few minutes.</p>
             <a href="/reports" className="inline-flex items-center gap-2 bg-[#2D4A46] text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-[#1E3330]">
               Browse Reports <ArrowRight className="w-4 h-4" />
             </a>
@@ -111,7 +111,7 @@ export default function MyReports() {
                           href={`/reports/${r.reportId}`}
                           className="flex items-center gap-1.5 bg-[#B0C4B1] text-[#2D4A46] text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[#9AB59B] transition-colors"
                         >
-                          Purchase to Download
+                          Buy to Download
                         </a>
                       ) : null}
                     </div>
@@ -119,7 +119,7 @@ export default function MyReports() {
 
                   {r.status === "done" && r.content?.sections && (
                     <div className="mt-4 p-4 bg-[#FAFAF8] rounded-xl border border-[#E2E8F0]">
-                      <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-2">Preview — Executive Summary</p>
+                      <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-2">Summary Preview</p>
                       <p className="text-sm text-[#475569] leading-relaxed">
                         {(r.content.sections["Executive Summary"] ?? Object.values(r.content.sections)[0] ?? "").substring(0, 300)}…
                       </p>
@@ -133,7 +133,7 @@ export default function MyReports() {
 
         <div className="mt-8">
           <a href="/reports" className="inline-flex items-center gap-2 text-[#2D4A46] font-semibold hover:underline text-sm">
-            <ArrowRight className="w-4 h-4" /> Browse more reports
+            <ArrowRight className="w-4 h-4" /> See more reports
           </a>
         </div>
       </div>

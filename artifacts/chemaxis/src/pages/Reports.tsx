@@ -55,8 +55,8 @@ export default function Reports() {
 
       <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#1E293B] mb-2">Chemical Market Reports</h1>
-          <p className="text-[#64748B]">AI-translated, AI-generated reports from primary Chinese market data sources. Download as PDF.</p>
+          <h1 className="text-3xl font-bold text-[#1E293B] mb-2">Our Reports</h1>
+          <p className="text-[#64748B]">Browse below and click any report to learn more. Each one comes as a downloadable PDF in your chosen language.</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -65,7 +65,7 @@ export default function Reports() {
             <input
               value={search} onChange={e => setSearch(e.target.value)}
               className="w-full pl-11 pr-4 py-3 rounded-xl border border-[#E2E8F0] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]"
-              placeholder="Search by chemical, category, or keyword…"
+              placeholder="Search by name or topic…"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -82,7 +82,7 @@ export default function Reports() {
         ) : filtered.length === 0 ? (
           <div className="py-20 text-center">
             <FileText className="w-12 h-12 text-[#CBD5E1] mx-auto mb-3" />
-            <p className="text-[#64748B]">No reports match your search.</p>
+            <p className="text-[#64748B]">No reports found. Try a different search or category.</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -109,7 +109,7 @@ export default function Reports() {
                     <FileText className="w-3.5 h-3.5" />{r.pageCount} pages
                   </div>
                   {r.sourceLanguage === "zh" && (
-                    <span className="text-xs text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-full">AI Translated</span>
+                    <span className="text-xs text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-full">Translated</span>
                   )}
                   {r.purchased && (
                     <span className="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full font-semibold">Purchased</span>

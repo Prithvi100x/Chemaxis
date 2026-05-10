@@ -55,8 +55,8 @@ export default function Login() {
             <FlaskConical className="w-7 h-7" />
             ChemAxis
           </a>
-          <h1 className="text-2xl font-bold text-[#1E293B] mb-1">Welcome back</h1>
-          <p className="text-[#64748B] text-sm">Sign in to access your reports</p>
+          <h1 className="text-2xl font-bold text-[#1E293B] mb-1">Sign In</h1>
+          <p className="text-[#64748B] text-sm">Enter your email and password below to continue.</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-8">

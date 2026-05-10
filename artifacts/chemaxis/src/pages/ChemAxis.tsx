@@ -657,7 +657,7 @@ function NavBar() {
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          {[{ label: "About", href: "#about" }, { label: "Reports", href: "/reports" }, { label: "Services", href: "#services" }, { label: "Cases", href: "#cases" }].map((item) => (
+          {[{ label: "About Us", href: "#about" }, { label: "Reports", href: "/reports" }, { label: "How It Works", href: "#data-reports" }, { label: "Contact", href: "#contact" }].map((item) => (
             <a key={item.label} href={item.href} className="text-sm font-medium text-[var(--ca-muted)] hover:text-[var(--ca-primary)] transition-colors">
               {item.label}
             </a>
@@ -690,7 +690,7 @@ function NavBar() {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-full left-0 right-0 bg-[var(--ca-bg)] border-b border-[var(--ca-border)] p-6 flex flex-col gap-4 shadow-xl md:hidden"
           >
-            {[{ label: "About", href: "#about" }, { label: "Reports", href: "/reports" }, { label: "Services", href: "#services" }, { label: "Cases", href: "#cases" }].map((item) => (
+            {[{ label: "About Us", href: "#about" }, { label: "Reports", href: "/reports" }, { label: "How It Works", href: "#data-reports" }, { label: "Contact", href: "#contact" }].map((item) => (
               <a key={item.label} href={item.href} className="text-lg font-medium text-[var(--ca-fg)]" onClick={() => setMobileMenuOpen(false)}>
                 {item.label}
               </a>
@@ -723,7 +723,7 @@ function HeroSection() {
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgb(var(--ca-sage-rgb)/0.20)] border border-[rgb(var(--ca-sage-rgb)/0.40)] text-[var(--ca-primary)] text-[11px] sm:text-xs font-semibold tracking-wide uppercase mb-5 sm:mb-6"
         >
           <span className="w-2 h-2 rounded-full bg-[var(--ca-primary)] animate-pulse" />
-          Chemical Intelligence Platform
+          Chemical Market Reports
         </motion.div>
 
         <motion.h1
@@ -732,9 +732,8 @@ function HeroSection() {
           transition={{ duration: 0.7, delay: 0.1 }}
           className="font-serif text-[2.25rem] leading-[1.1] sm:text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight text-[var(--ca-fg)] sm:leading-[1.05] mb-5 sm:mb-6 px-1"
         >
-          Powering Chemical{" "}
-          <span className="text-[var(--ca-primary)] italic">Intelligence</span>{" "}
-          Through Data.
+          Chemical Reports.{" "}
+          <span className="text-[var(--ca-primary)] italic">In Your Language.</span>
         </motion.h1>
 
         <motion.p
@@ -743,7 +742,7 @@ function HeroSection() {
           transition={{ duration: 0.7, delay: 0.2 }}
           className="text-base sm:text-lg md:text-xl text-[var(--ca-muted)] mb-8 sm:mb-10 max-w-2xl leading-relaxed px-1"
         >
-          Get AI-powered chemical market reports. We translate Chinese market data into clear English reports — ready to download as PDF in minutes.
+          We find chemical market data from China and turn it into clear, easy-to-read PDF reports — in English, Arabic, German, French, or Chinese. Browse, order, and download in minutes.
         </motion.p>
 
         <motion.div
@@ -762,10 +761,10 @@ function HeroSection() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-5xl">
           {[
-            { label: "Data Points", value: "450M+", suffix: "Processed Daily" },
-            { label: "Market Coverage", value: "98%", suffix: "Global Chemical Sector" },
-            { label: "Prediction Accuracy", value: "94.2%", suffix: "AI Forecast Rate" },
-            { label: "Active Suppliers", value: "12,000+", suffix: "Vetted & Monitored" }
+            { label: "Data Points", value: "450M+", suffix: "Updated every day" },
+            { label: "Market Coverage", value: "98%", suffix: "Across all chemicals" },
+            { label: "Forecast Accuracy", value: "94%", suffix: "AI price predictions" },
+            { label: "Suppliers Tracked", value: "12,000+", suffix: "Around the world" }
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -848,10 +847,10 @@ function PartnersTicker() {
 
 function AboutSection() {
   const pillars = [
-    { icon: <Activity />, title: "Scientific Rigor", desc: "Data validated through multi-tier chemical heuristic models." },
-    { icon: <Zap />, title: "Real-Time Feeds", desc: "Sub-second latency on commodity pricing and availability." },
-    { icon: <Shield />, title: "Enterprise Security", desc: "SOC2 compliant infrastructure for sensitive procurement data." },
-    { icon: <Brain />, title: "AI Forecasting", desc: "Predictive models trained on 20 years of chemical cycles." }
+    { icon: <Activity />, title: "Accurate Data", desc: "Every report is checked for accuracy before you receive it." },
+    { icon: <Zap />, title: "Up-to-Date Prices", desc: "Pricing data is updated regularly so you always have the latest numbers." },
+    { icon: <Shield />, title: "Your Data is Safe", desc: "Your account and reports are protected with industry-standard security." },
+    { icon: <Brain />, title: "Smart Forecasts", desc: "Our AI is trained on 20 years of data to help you plan ahead." }
   ];
 
   return (
@@ -859,10 +858,10 @@ function AboutSection() {
       <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
         <div>
           <h2 className="font-serif text-[1.75rem] leading-tight sm:text-3xl md:text-4xl font-medium text-[var(--ca-fg)] mb-5 sm:mb-6">
-            The nervous system of the <span className="text-[var(--ca-primary)] italic">chemical supply chain</span>.
+            Your trusted source for <span className="text-[var(--ca-primary)] italic">chemical market data</span>.
           </h2>
           <p className="text-[var(--ca-muted)] text-base sm:text-lg leading-relaxed mb-8 sm:mb-10">
-            ChemAxis collects raw Chinese chemical market data that most analysts can't read or access, then converts it into clear, structured reports in your language. We do the sourcing. AI does the writing. You get the insights.
+            We find chemical market data from China — the kind most people can't access or read — and turn it into clear, professional reports in your language. You simply pick a report, choose your language, and download your PDF. It's that easy.
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
@@ -954,16 +953,16 @@ function AboutSection() {
 
 function ServicesSection() {
   const services = [
-    { icon: <BarChart3 />, title: "Market Analytics", desc: "Live pricing dashboards for 10,000+ compounds with historical context." },
-    { icon: <Package />, title: "Supply Chain Intel", desc: "Track vessel movements, plant shutdowns, and regional bottlenecks." },
-    { icon: <FileText />, title: "Industry Reports", desc: "Curated weekly briefings on macro trends affecting chemical sectors." },
-    { icon: <TrendingUp />, title: "AI-Driven Forecasts", desc: "Machine learning predictions for price volatility and supply crunches." }
+    { icon: <BarChart3 />, title: "Current Prices", desc: "See today's prices for thousands of chemicals, with historical trend data." },
+    { icon: <Package />, title: "Supply Alerts", desc: "Get notified when supply is short or prices are likely to rise." },
+    { icon: <FileText />, title: "Clear Reports", desc: "Easy-to-read weekly updates on what is happening in chemical markets." },
+    { icon: <TrendingUp />, title: "Price Forecasts", desc: "Forward-looking predictions to help you buy at the right time." }
   ];
 
   return (
     <div className="py-16 sm:py-24 px-5 sm:px-8 lg:px-16 lg:border-r border-[rgb(var(--ca-border-rgb)/0.60)] bg-[var(--ca-surface)]" id="services">
-      <h3 className="font-serif text-2xl sm:text-3xl font-medium text-[var(--ca-fg)] mb-3 sm:mb-4">Core Capabilities</h3>
-      <p className="text-[var(--ca-muted)] mb-8 sm:mb-12 max-w-md text-sm sm:text-base">Comprehensive tooling for the modern chemical procurement organization.</p>
+      <h3 className="font-serif text-2xl sm:text-3xl font-medium text-[var(--ca-fg)] mb-3 sm:mb-4">What You Get</h3>
+      <p className="text-[var(--ca-muted)] mb-8 sm:mb-12 max-w-md text-sm sm:text-base">Everything you need to understand chemical markets — clearly and simply.</p>
       
       <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
         {services.map((service, i) => (
@@ -1090,17 +1089,17 @@ function DataShowcaseSection() {
 
 function CaseStudiesSection() {
   const cases = [
-    { brand: "Tata Chemicals", metric: "$4.2M", label: "Saved in Q3 Procurement", desc: "Leveraged AI forecasting to pre-purchase soda ash raw materials ahead of a predicted supply crunch in Eastern Europe." },
-    { brand: "Asian Paints", metric: "14%", label: "Margin Improvement", desc: "Optimized titanium dioxide sourcing across 12 global suppliers using real-time price arbitrage analytics." },
-    { brand: "UPL Limited", metric: "18 days", label: "Faster Risk Response", desc: "Identified alternative intermediate suppliers automatically when primary factory declared force majeure." }
+    { brand: "Tata Chemicals", metric: "$4.2M", label: "Saved in Q3", desc: "Used our reports to buy materials early — before prices went up. Saved $4.2 million in a single quarter." },
+    { brand: "Asian Paints", metric: "14%", label: "Higher Profit Margin", desc: "Found better suppliers for titanium dioxide using our price data. Profit margins improved by 14%." },
+    { brand: "UPL Limited", metric: "18 days", label: "To Find a New Supplier", desc: "When their main factory had a problem, they found a backup supplier in just 18 days using our data." }
   ];
 
   return (
     <section className="py-16 sm:py-24 px-5 sm:px-6 bg-[var(--ca-surface)]" id="cases">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-10 sm:mb-16">
-          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-[var(--ca-fg)] mb-3 sm:mb-4">Proven Impact</h2>
-          <p className="text-[var(--ca-muted)] text-sm sm:text-base max-w-2xl mx-auto">How leading chemical enterprises use ChemAxis to drive bottom-line results.</p>
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-[var(--ca-fg)] mb-3 sm:mb-4">Real Results</h2>
+          <p className="text-[var(--ca-muted)] text-sm sm:text-base max-w-2xl mx-auto">See what our customers have achieved using ChemAxis reports.</p>
         </div>
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
@@ -1133,15 +1132,15 @@ function CaseStudiesSection() {
 
 function DataReportsSection() {
   const steps = [
-    { num: "01", title: "Pick a Report", desc: "Browse our library of chemical market reports sourced from primary Chinese industry data." },
-    { num: "02", title: "AI Generates It for You", desc: "Our AI reads the raw data, translates it into your chosen language, and writes a clear structured report." },
-    { num: "03", title: "Pay & Download PDF", desc: "Pay once per report. Get a clean, professional PDF you can share with your team instantly." },
+    { num: "01", title: "Choose a Report", desc: "Browse our library and click on any report that interests you. Each one covers a specific chemical." },
+    { num: "02", title: "We Create It for You", desc: "Pick your language. Our system reads the raw data and writes a clear, structured report — in about 1 minute." },
+    { num: "03", title: "Pay & Download", desc: "Pay once. Instantly get a professional PDF you can save, print, or share with your team." },
   ];
   const features = [
-    { icon: "🌏", title: "Chinese → Any Language", desc: "Primary Chinese market data translated into English, Arabic, German, French, or more." },
-    { icon: "🤖", title: "AI-Written Analysis", desc: "Not just a translation — the AI writes proper sections: price forecast, supply/demand, regional breakdown, risks." },
-    { icon: "📄", title: "Professional PDF", desc: "Download a clean, branded PDF report ready to share in meetings or send to your team." },
-    { icon: "💰", title: "Pay Per Report", desc: "No monthly subscriptions. Buy just the reports you need, starting from $35." },
+    { icon: "🌏", title: "Any Language", desc: "Get your report in English, Arabic, German, French, or Chinese — you choose." },
+    { icon: "📊", title: "Full Analysis", desc: "Each report includes: price outlook, supply & demand, regional breakdown, and key risks — clearly explained." },
+    { icon: "📄", title: "PDF Download", desc: "You get a clean, professional PDF you can save, print, or share in a meeting." },
+    { icon: "💰", title: "No Subscription", desc: "Pay only for the reports you want. No monthly fees. Prices start at $35." },
   ];
 
   return (
@@ -1152,10 +1151,10 @@ function DataReportsSection() {
             Data Reports
           </div>
           <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-[var(--ca-fg)] mb-4">
-            Get chemical reports in your language
+            How It Works
           </h2>
           <p className="text-[var(--ca-muted)] text-sm sm:text-base max-w-2xl mx-auto">
-            We source hard-to-find data from Chinese chemical markets, then use AI to translate and generate a full report — customized to your focus areas.
+            Getting a chemical market report is simple. Just three steps — no experience needed.
           </p>
         </div>
 
@@ -1198,8 +1197,8 @@ function ContactSection() {
         
         <div className="relative z-10">
           <div className="text-center mb-8 sm:mb-10">
-            <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[var(--ca-fg)] mb-2 sm:mb-3">Request Platform Access</h2>
-            <p className="text-[var(--ca-muted)] text-sm sm:text-base">ChemAxis is currently available for enterprise procurement teams. Submit your details for a tailored demonstration.</p>
+            <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[var(--ca-fg)] mb-2 sm:mb-3">Contact Us</h2>
+            <p className="text-[var(--ca-muted)] text-sm sm:text-base">Have a question or need help? Fill in your details and we will get back to you as soon as possible.</p>
           </div>
 
           <form className="space-y-5 sm:space-y-6" onSubmit={(e) => e.preventDefault()}>
@@ -1234,11 +1233,11 @@ function ContactSection() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-[var(--ca-fg)]">How can we help?</label>
-              <textarea className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all min-h-[120px] resize-y" placeholder="Briefly describe your procurement challenges..." />
+              <textarea className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all min-h-[120px] resize-y" placeholder="Tell us what you need help with..." />
             </div>
 
             <button className="w-full py-4 rounded-xl bg-[var(--ca-primary)] text-white font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-lg shadow-[rgb(var(--ca-primary-rgb)/0.20)]">
-              Submit Request
+              Send Message
             </button>
           </form>
         </div>
@@ -1263,11 +1262,11 @@ function Footer() {
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:gap-6 text-xs sm:text-sm text-[var(--ca-muted)]">
           <a href="#" className="hover:text-[var(--ca-primary)]">Privacy Policy</a>
           <a href="#" className="hover:text-[var(--ca-primary)]">Terms of Service</a>
-          <a href="#" className="hover:text-[var(--ca-primary)]">API Documentation</a>
+          <a href="#contact" className="hover:text-[var(--ca-primary)]">Contact Us</a>
         </div>
         
         <div className="text-xs sm:text-sm text-[var(--ca-muted-soft)]">
-          &copy; {new Date().getFullYear()} ChemAxis Intelligence. All rights reserved.
+          &copy; {new Date().getFullYear()} ChemAxis. All rights reserved.
         </div>
       </div>
     </footer>

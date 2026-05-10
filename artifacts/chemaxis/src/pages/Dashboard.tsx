@@ -61,13 +61,13 @@ export default function Dashboard() {
 
       <div className="max-w-5xl mx-auto px-6 py-10">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#1E293B]">Welcome back, {user.name.split(" ")[0]}</h1>
-          <p className="text-[#64748B] mt-1">Here's what's happening with your reports.</p>
+          <h1 className="text-2xl font-bold text-[#1E293B]">Hello, {user.name.split(" ")[0]}!</h1>
+          <p className="text-[#64748B] mt-1">Here is a summary of your reports.</p>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-10">
           {[
-            { label: "Reports Generated", value: myReports.length, icon: FileText, color: "bg-[#2D4A46]" },
+            { label: "Reports Created", value: myReports.length, icon: FileText, color: "bg-[#2D4A46]" },
             { label: "Reports Purchased", value: purchases.length, icon: ShoppingBag, color: "bg-[#B0C4B1]" },
             { label: "Total Spent", value: `$${(totalSpent / 100).toFixed(2)}`, icon: Download, color: "bg-[#93A5CF]" },
           ].map(s => (
@@ -85,7 +85,7 @@ export default function Dashboard() {
 
         <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 mb-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-[#1E293B]">Recent Generated Reports</h2>
+            <h2 className="font-bold text-[#1E293B]">Recent Reports</h2>
             <a href="/my-reports" className="text-sm text-[#2D4A46] font-semibold hover:underline flex items-center gap-1">View all <ArrowRight className="w-3.5 h-3.5" /></a>
           </div>
           {dataLoading ? (
@@ -93,8 +93,8 @@ export default function Dashboard() {
           ) : myReports.length === 0 ? (
             <div className="py-10 text-center">
               <FileText className="w-10 h-10 text-[#CBD5E1] mx-auto mb-3" />
-              <p className="text-[#64748B] text-sm">No reports generated yet.</p>
-              <a href="/reports" className="inline-block mt-3 text-sm text-[#2D4A46] font-semibold hover:underline">Browse reports →</a>
+              <p className="text-[#64748B] text-sm">You have not created any reports yet.</p>
+              <a href="/reports" className="inline-block mt-3 text-sm text-[#2D4A46] font-semibold hover:underline">Browse reports and get started →</a>
             </div>
           ) : (
             <div className="space-y-3">
@@ -118,8 +118,8 @@ export default function Dashboard() {
 
         <div className="bg-gradient-to-r from-[#2D4A46] to-[#4A7068] rounded-2xl p-6 text-white flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-lg mb-1">Ready to explore more data?</h3>
-            <p className="text-[#B0C4B1] text-sm">Browse our full library of chemical market reports.</p>
+            <h3 className="font-bold text-lg mb-1">Want more reports?</h3>
+            <p className="text-[#B0C4B1] text-sm">Browse our full library and order any report you need.</p>
           </div>
           <a href="/reports" className="bg-white text-[#2D4A46] font-bold px-5 py-2.5 rounded-xl hover:bg-[#FAFAF8] transition-colors text-sm whitespace-nowrap">
             Browse Reports →

@@ -125,7 +125,7 @@ export default function ReportDetail() {
             {report.sampleContent && Object.keys(report.sampleContent).length > 0 && (
               <div className="mb-8">
                 <button onClick={() => setShowSample(!showSample)} className="flex items-center gap-2 font-semibold text-[#1E293B] mb-3 hover:text-[#2D4A46]">
-                  Sample Data Preview {showSample ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  Preview Data {showSample ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
                 {showSample && (
                   <div className="grid grid-cols-2 gap-3 p-5 bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0]">
@@ -143,8 +143,8 @@ export default function ReportDetail() {
             {genReport?.status === "done" && genReport.content?.sections && (
               <div className="border border-[#E2E8F0] rounded-2xl overflow-hidden">
                 <div className="bg-[#2D4A46] px-6 py-4">
-                  <h2 className="text-white font-bold">Generated Report Preview</h2>
-                  <p className="text-[#B0C4B1] text-sm mt-1">AI-generated — language: {LANGUAGES.find(l => l.code === genReport.targetLanguage)?.label ?? genReport.targetLanguage}</p>
+                  <h2 className="text-white font-bold">Your Report Preview</h2>
+                  <p className="text-[#B0C4B1] text-sm mt-1">Language: {LANGUAGES.find(l => l.code === genReport.targetLanguage)?.label ?? genReport.targetLanguage}</p>
                 </div>
                 <div className="p-6 space-y-6 max-h-[500px] overflow-y-auto">
                   {Object.entries(genReport.content.sections).slice(0, 3).map(([name, text]) => (
@@ -164,14 +164,14 @@ export default function ReportDetail() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 sticky top-6">
               <div className="text-3xl font-bold text-[#1E293B] mb-1">${(report.priceCents / 100).toFixed(2)}</div>
-              <p className="text-[#64748B] text-sm mb-6">One-time purchase. Unlimited downloads.</p>
+              <p className="text-[#64748B] text-sm mb-6">Pay once. Download anytime.</p>
 
               {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{error}</div>}
 
               {!genReport || genReport.status === "error" ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-[#1E293B] mb-2">Output Language</label>
+                    <label className="block text-sm font-semibold text-[#1E293B] mb-2">Choose your language</label>
                     <select value={targetLang} onChange={e => setTargetLang(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]">
                       {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
@@ -179,33 +179,33 @@ export default function ReportDetail() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-[#1E293B] mb-2">
-                      Specific Focus Areas <span className="text-[#94A3B8] font-normal">(optional)</span>
+                      Anything special to include? <span className="text-[#94A3B8] font-normal">(optional)</span>
                     </label>
                     <textarea value={customNotes} onChange={e => setCustomNotes(e.target.value)} rows={3}
                       className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46] resize-none"
-                      placeholder="e.g. Focus on Southeast Asia demand and Q3 price forecast…" />
+                      placeholder="e.g. Focus on supply problems, or Southeast Asia pricing…" />
                   </div>
                   <button onClick={handleGenerate} disabled={generating}
                     className="w-full py-3 bg-[#2D4A46] hover:bg-[#1E3330] text-white font-bold rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
-                    {generating ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</> : "Generate My Report"}
+                    {generating ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating report…</> : "Create My Report"}
                   </button>
-                  {!user && <p className="text-xs text-center text-[#94A3B8]">You'll be asked to sign in first.</p>}
+                  {!user && <p className="text-xs text-center text-[#94A3B8]">You will need to sign in before creating a report.</p>}
                 </div>
               ) : genReport.status === "processing" || genReport.status === "pending" ? (
                 <div className="py-6 text-center">
                   <Loader2 className="w-8 h-8 animate-spin text-[#2D4A46] mx-auto mb-3" />
-                  <p className="font-semibold text-[#1E293B]">AI is generating your report…</p>
-                  <p className="text-[#64748B] text-sm mt-1">This takes about 30–60 seconds. You can come back later.</p>
+                  <p className="font-semibold text-[#1E293B]">We are creating your report…</p>
+                  <p className="text-[#64748B] text-sm mt-1">This usually takes about 1 minute. You can come back later.</p>
                 </div>
               ) : genReport.status === "done" ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-green-700 font-semibold text-sm mb-2">
-                    <CheckCircle2 className="w-4 h-4" /> Report ready!
+                    <CheckCircle2 className="w-4 h-4" /> Your report is ready!
                   </div>
                   {!purchased ? (
                     <button onClick={handlePurchase} disabled={purchasing}
                       className="w-full py-3 bg-[#2D4A46] hover:bg-[#1E3330] text-white font-bold rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
-                      {purchasing ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing…</> : <><ShoppingCart className="w-4 h-4" /> Purchase & Download ${(report.priceCents / 100).toFixed(2)}</>}
+                      {purchasing ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing…</> : <><ShoppingCart className="w-4 h-4" /> Buy & Download PDF — ${(report.priceCents / 100).toFixed(2)}</>}
                     </button>
                   ) : (
                     <a href={api.generate.download(genReport.id)}
@@ -214,13 +214,13 @@ export default function ReportDetail() {
                     </a>
                   )}
                   <button onClick={() => setGenReport(null)} className="w-full py-2 text-sm text-[#64748B] hover:text-[#2D4A46] border border-[#E2E8F0] rounded-xl">
-                    Regenerate with different options
+                    Start over with different options
                   </button>
                 </div>
               ) : null}
 
               <div className="mt-6 pt-5 border-t border-[#E2E8F0] space-y-2">
-                {["AI-translated from primary sources", "Custom language output", "Downloadable PDF", "Structured sections"].map(f => (
+                {["Translated from Chinese market sources", "Available in 5 languages", "Professional PDF download", "Clear sections: prices, forecasts, risks"].map(f => (
                   <div key={f} className="flex items-center gap-2 text-sm text-[#64748B]">
                     <CheckCircle2 className="w-4 h-4 text-[#B0C4B1] shrink-0" /> {f}
                   </div>

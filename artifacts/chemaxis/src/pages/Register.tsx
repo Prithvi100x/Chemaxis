@@ -58,8 +58,8 @@ export default function Register() {
             <FlaskConical className="w-7 h-7" />
             ChemAxis
           </a>
-          <h1 className="text-2xl font-bold text-[#1E293B] mb-1">Create your account</h1>
-          <p className="text-[#64748B] text-sm">Access AI-powered chemical market reports</p>
+          <h1 className="text-2xl font-bold text-[#1E293B] mb-1">Create a Free Account</h1>
+          <p className="text-[#64748B] text-sm">Sign up to browse and download chemical market reports.</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-8">
@@ -88,7 +88,7 @@ export default function Register() {
               <input value={form.name} onChange={set("name")} required className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]" placeholder="Jane Smith" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#1E293B] mb-1.5">Work Email</label>
+              <label className="block text-sm font-medium text-[#1E293B] mb-1.5">Email Address</label>
               <input type="email" value={form.email} onChange={set("email")} required className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]" placeholder="you@company.com" />
             </div>
             <div>
