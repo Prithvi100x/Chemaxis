@@ -12,8 +12,6 @@ const PgSession = connectPgSimple(session);
 
 const app: Express = express();
 
-// Trust Replit's reverse proxy so req.secure works correctly
-// and express-session sets the cookie on HTTPS connections
 app.set("trust proxy", 1);
 
 app.use(
@@ -30,9 +28,28 @@ app.use(
   }),
 );
 
+const allowedOrigins = (() => {
+  const raw = process.env.ALLOWED_ORIGINS;
+  if (raw) return raw.split(",").map((o) => o.trim()).filter(Boolean);
+  return null;
+})();
+
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      if (!allowedOrigins) {
+        callback(null, true);
+        return;
+      }
+      const allowed = allowedOrigins.some(
+        (o) => o === origin || origin.endsWith(o.replace(/^https?:\/\//, "")),
+      );
+      callback(allowed ? null : new Error("CORS: origin not allowed"), allowed);
+    },
     credentials: true,
   }),
 );
@@ -47,10 +64,10 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "lax" : "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   }),
 );
