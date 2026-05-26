@@ -14,17 +14,21 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
 }
 
 async function requestMaybeNull<T>(path: string, opts: RequestInit = {}): Promise<T | null> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...(opts.headers ?? {}) },
-    credentials: "include",
-    ...opts,
-  });
-  if (res.status === 401 || res.status === 403) return null;
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`);
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      headers: { "Content-Type": "application/json", ...(opts.headers ?? {}) },
+      credentials: "include",
+      ...opts,
+    });
+    if (res.status === 401 || res.status === 403 || res.status === 502 || res.status === 503) return null;
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`);
+    }
+    return res.json() as Promise<T>;
+  } catch {
+    return null;
   }
-  return res.json() as Promise<T>;
 }
 
 export type User = { id: string; name: string; email: string; company?: string };
