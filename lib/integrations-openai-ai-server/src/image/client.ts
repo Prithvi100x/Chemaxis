@@ -2,21 +2,21 @@ import fs from "node:fs";
 import OpenAI, { toFile } from "openai";
 import { Buffer } from "node:buffer";
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_BASE_URL must be set. Did you forget to provision the OpenAI AI integration?",
-  );
-}
+const apiKey =
+  process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? undefined;
+
+if (!apiKey) {
   throw new Error(
-    "AI_INTEGRATIONS_OPENAI_API_KEY must be set. Did you forget to provision the OpenAI AI integration?",
+    "An OpenAI API key must be set via OPENAI_API_KEY (for Railway/production) " +
+      "or AI_INTEGRATIONS_OPENAI_API_KEY (for Replit).",
   );
 }
 
 export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  apiKey,
+  ...(baseURL ? { baseURL } : {}),
 });
 
 export async function generateImageBuffer(
