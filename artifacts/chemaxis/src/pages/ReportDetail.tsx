@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import { api, type Report, type GeneratedReport } from "@/lib/api";
-import { FlaskConical, FileText, Download, ShoppingCart, Loader2, CheckCircle2, Globe, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { FlaskConical, FileText, Download, ShoppingCart, Loader2, CheckCircle2, Globe, ArrowLeft, ChevronDown, ChevronUp, AlertCircle, RefreshCw } from "lucide-react";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -25,6 +25,7 @@ export default function ReportDetail() {
   const [purchasing, setPurchasing] = useState(false);
   const [purchased, setPurchased] = useState(false);
   const [error, setError] = useState("");
+  const [genFailed, setGenFailed] = useState(false);
   const [showSample, setShowSample] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -39,7 +40,7 @@ export default function ReportDetail() {
 
   const handleGenerate = async () => {
     if (!user) { setLocation("/login"); return; }
-    setError(""); setGenerating(true);
+    setError(""); setGenFailed(false); setGenerating(true); setGenReport(null);
     try {
       const { id: genId } = await api.generate.start(id, targetLang, customNotes);
 
@@ -50,6 +51,7 @@ export default function ReportDetail() {
           if (g.status === "done" || g.status === "error") {
             if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
             setGenerating(false);
+            if (g.status === "error") setGenFailed(true);
           }
         } catch {
           // ignore transient poll errors
@@ -170,6 +172,15 @@ export default function ReportDetail() {
 
               {!genReport || genReport.status === "error" ? (
                 <div className="space-y-4">
+                  {genFailed && (
+                    <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold">Generation failed</p>
+                        <p className="text-xs mt-0.5 text-red-600">Something went wrong while creating your report. Please try again.</p>
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-semibold text-[#1E293B] mb-2">Choose your language</label>
                     <select value={targetLang} onChange={e => setTargetLang(e.target.value)}
@@ -187,7 +198,11 @@ export default function ReportDetail() {
                   </div>
                   <button onClick={handleGenerate} disabled={generating}
                     className="w-full py-3 bg-[#2D4A46] hover:bg-[#1E3330] text-white font-bold rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
-                    {generating ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating report…</> : "Create My Report"}
+                    {generating
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating report…</>
+                      : genFailed
+                        ? <><RefreshCw className="w-4 h-4" /> Try Again</>
+                        : "Create My Report"}
                   </button>
                   {!user && <p className="text-xs text-center text-[#94A3B8]">You will need to sign in before creating a report.</p>}
                 </div>
