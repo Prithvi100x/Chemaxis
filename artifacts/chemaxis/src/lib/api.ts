@@ -27,19 +27,19 @@ async function requestMaybeNull<T>(path: string, opts: RequestInit = {}): Promis
   return res.json() as Promise<T>;
 }
 
-export type User = { id: number; name: string; email: string; company?: string };
+export type User = { id: string; name: string; email: string; company?: string };
 export type Report = {
-  id: number; title: string; description: string; category: string;
+  id: string; title: string; description: string; category: string;
   sourceLanguage: string; priceCents: number; tags: string[] | null;
   pageCount: number; sampleContent: Record<string, unknown> | null;
   createdAt: string; purchased?: boolean;
 };
 export type GeneratedReport = {
-  id: number; reportId: number; targetLanguage: string; status: string;
+  id: string; reportId: string; targetLanguage: string; status: string;
   customNotes?: string; content?: { raw: string; sections: Record<string, string>; reportTitle: string; targetLanguage: string; generatedAt: string } | null;
   createdAt: string; reportTitle?: string; reportCategory?: string;
 };
-export type Purchase = { id: number; reportId: number; amountCents: number; status: string; createdAt: string; reportTitle?: string };
+export type Purchase = { id: string; reportId: string; amountCents: number; status: string; createdAt: string; reportTitle?: string };
 
 export const api = {
   auth: {
@@ -51,20 +51,20 @@ export const api = {
   },
   reports: {
     list: () => request<Report[]>("/reports"),
-    get: (id: number) => request<Report>(`/reports/${id}`),
+    get: (id: string) => request<Report>(`/reports/${id}`),
   },
   generate: {
-    start: (reportId: number, targetLanguage: string, customNotes?: string) =>
-      request<{ id: number; status: string }>(`/reports/${reportId}/generate`, {
+    start: (reportId: string, targetLanguage: string, customNotes?: string) =>
+      request<{ id: string; status: string }>(`/reports/${reportId}/generate`, {
         method: "POST", body: JSON.stringify({ targetLanguage, customNotes }),
       }),
-    get: (id: number) => request<GeneratedReport>(`/generated/${id}`),
+    get: (id: string) => request<GeneratedReport>(`/generated/${id}`),
     myReports: () => request<GeneratedReport[]>("/my-reports"),
-    download: (id: number) => `${BASE}/generated/${id}/download`,
+    download: (id: string) => `${BASE}/generated/${id}/download`,
   },
   purchase: {
-    buy: (reportId: number, generatedReportId?: number) =>
-      request<{ ok: boolean; purchaseId: number; alreadyOwned: boolean }>("/purchase", {
+    buy: (reportId: string, generatedReportId?: string) =>
+      request<{ ok: boolean; purchaseId: string; alreadyOwned: boolean }>("/purchase", {
         method: "POST", body: JSON.stringify({ reportId, generatedReportId }),
       }),
     list: () => request<Purchase[]>("/purchases"),

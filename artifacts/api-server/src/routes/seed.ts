@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { db, reportsTable } from "@workspace/db";
+import { Report } from "@workspace/db";
 
 const router = Router();
 
 router.post("/seed", async (req, res) => {
   try {
-    const existing = await db.select().from(reportsTable).limit(1);
-    if (existing.length > 0) {
+    const count = await Report.countDocuments();
+    if (count > 0) {
       res.json({ ok: true, message: "Already seeded" });
       return;
     }

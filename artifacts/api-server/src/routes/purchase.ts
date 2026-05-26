@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, reportsTable, purchasesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import mongoose from "mongoose";
+import { Report, Purchase } from "@workspace/db";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
@@ -13,29 +13,33 @@ router.post("/purchase", requireAuth, async (req, res) => {
     res.status(400).json({ error: "reportId is required" });
     return;
   }
+  if (!mongoose.Types.ObjectId.isValid(reportId)) {
+    res.status(404).json({ error: "Report not found" });
+    return;
+  }
 
   try {
-    const [report] = await db.select().from(reportsTable).where(eq(reportsTable.id, reportId)).limit(1);
+    const report = await Report.findById(reportId);
     if (!report) {
       res.status(404).json({ error: "Report not found" });
       return;
     }
 
-    const existing = await db.select().from(purchasesTable)
-      .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, reportId))).limit(1);
-    if (existing.length > 0) {
-      res.json({ ok: true, purchaseId: existing[0].id, alreadyOwned: true });
+    const existing = await Purchase.findOne({ userId, reportId });
+    if (existing) {
+      res.json({ ok: true, purchaseId: existing._id.toString(), alreadyOwned: true });
       return;
     }
 
-    const [purchase] = await db.insert(purchasesTable).values({
-      userId, reportId,
-      generatedReportId: generatedReportId ?? null,
-      amountCents: report.priceCents,
+    const purchase = await Purchase.create({
+      userId,
+      reportId,
+      generatedReportId: generatedReportId && mongoose.Types.ObjectId.isValid(generatedReportId) ? generatedReportId : null,
+      amountCents: report.get("priceCents"),
       status: "completed",
-    }).returning();
+    });
 
-    res.json({ ok: true, purchaseId: purchase.id, alreadyOwned: false });
+    res.json({ ok: true, purchaseId: purchase._id.toString(), alreadyOwned: false });
   } catch (err) {
     req.log.error({ err }, "Purchase error");
     res.status(500).json({ error: "Purchase failed" });
@@ -45,18 +49,19 @@ router.post("/purchase", requireAuth, async (req, res) => {
 router.get("/purchases", requireAuth, async (req, res) => {
   const userId = req.jwtUser!.userId;
   try {
-    const purchases = await db.select({
-      id: purchasesTable.id,
-      reportId: purchasesTable.reportId,
-      amountCents: purchasesTable.amountCents,
-      status: purchasesTable.status,
-      createdAt: purchasesTable.createdAt,
-      reportTitle: reportsTable.title,
-    })
-    .from(purchasesTable)
-    .leftJoin(reportsTable, eq(purchasesTable.reportId, reportsTable.id))
-    .where(eq(purchasesTable.userId, userId));
-    res.json(purchases);
+    const purchases = await Purchase.find({ userId })
+      .populate<{ reportId: { _id: mongoose.Types.ObjectId; title: string } }>("reportId", "title")
+      .sort({ createdAt: -1 });
+
+    res.json(purchases.map(p => {
+      const obj = p.toJSON() as Record<string, unknown>;
+      const reportDoc = p.reportId as unknown as { _id: mongoose.Types.ObjectId; title: string } | null;
+      return {
+        ...obj,
+        reportId: reportDoc?._id?.toString() ?? obj.reportId,
+        reportTitle: reportDoc?.title ?? null,
+      };
+    }));
   } catch (err) {
     req.log.error({ err }, "Purchases list error");
     res.status(500).json({ error: "Failed to fetch purchases" });

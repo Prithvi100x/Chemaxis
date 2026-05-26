@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { db, usersTable } from "@workspace/db";
-import { eq, or } from "drizzle-orm";
+import mongoose from "mongoose";
+import { User } from "@workspace/db";
 import { signToken, COOKIE_NAME, COOKIE_OPTIONS, CLEAR_COOKIE_OPTIONS } from "../lib/jwt.js";
 import { requireAuth } from "../middleware/auth.js";
 
@@ -14,16 +14,16 @@ router.post("/auth/register", async (req, res) => {
     return;
   }
   try {
-    const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-    if (existing.length > 0) {
+    const existing = await User.findOne({ email });
+    if (existing) {
       res.status(409).json({ error: "An account with this email already exists" });
       return;
     }
     const passwordHash = await bcrypt.hash(password, 12);
-    const [user] = await db.insert(usersTable).values({ name, email, passwordHash, company }).returning();
-    const token = signToken({ userId: user.id, name: user.name, email: user.email });
+    const user = await User.create({ name, email, passwordHash, company });
+    const token = signToken({ userId: user._id.toString(), name: user.name, email: user.email });
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
-    res.json({ id: user.id, name: user.name, email: user.email, company: user.company });
+    res.json({ id: user._id.toString(), name: user.name, email: user.email, company: user.company });
   } catch (err) {
     req.log.error({ err }, "Register error");
     res.status(500).json({ error: "Registration failed" });
@@ -37,19 +37,19 @@ router.post("/auth/login", async (req, res) => {
     return;
   }
   try {
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-    if (!user || !user.passwordHash) {
+    const user = await User.findOne({ email });
+    if (!user || !user.get("passwordHash")) {
       res.status(401).json({ error: "Invalid email or password" });
       return;
     }
-    const valid = await bcrypt.compare(password, user.passwordHash);
+    const valid = await bcrypt.compare(password, user.get("passwordHash") as string);
     if (!valid) {
       res.status(401).json({ error: "Invalid email or password" });
       return;
     }
-    const token = signToken({ userId: user.id, name: user.name, email: user.email });
+    const token = signToken({ userId: user._id.toString(), name: user.get("name"), email: user.get("email") });
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
-    res.json({ id: user.id, name: user.name, email: user.email, company: user.company });
+    res.json({ id: user._id.toString(), name: user.get("name"), email: user.get("email"), company: user.get("company") });
   } catch (err) {
     req.log.error({ err }, "Login error");
     res.status(500).json({ error: "Login failed" });
@@ -106,16 +106,15 @@ router.get("/auth/google/callback", async (req, res) => {
     });
     const gUser = (await userInfoRes.json()) as { id: string; email: string; name: string; picture?: string };
     if (!gUser.email || !gUser.id) { res.redirect("/login?error=google_failed"); return; }
-    let [user] = await db.select().from(usersTable)
-      .where(or(eq(usersTable.googleId, gUser.id), eq(usersTable.email, gUser.email))).limit(1);
+    let user = await User.findOne({ $or: [{ googleId: gUser.id }, { email: gUser.email }] });
     if (user) {
-      if (!user.googleId) {
-        await db.update(usersTable).set({ googleId: gUser.id, avatarUrl: gUser.picture ?? null }).where(eq(usersTable.id, user.id));
+      if (!user.get("googleId")) {
+        await User.findByIdAndUpdate(user._id, { googleId: gUser.id, avatarUrl: gUser.picture ?? null });
       }
     } else {
-      [user] = await db.insert(usersTable).values({ name: gUser.name, email: gUser.email, googleId: gUser.id, avatarUrl: gUser.picture ?? null, passwordHash: null }).returning();
+      user = await User.create({ name: gUser.name, email: gUser.email, googleId: gUser.id, avatarUrl: gUser.picture ?? null });
     }
-    const token = signToken({ userId: user.id, name: user.name, email: user.email });
+    const token = signToken({ userId: user._id.toString(), name: user.get("name"), email: user.get("email") });
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
     res.redirect("/dashboard");
   } catch (err) {

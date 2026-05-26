@@ -24,7 +24,7 @@ export const CLEAR_COOKIE_OPTIONS: CookieOptions = {
 };
 
 export interface JWTPayload {
-  userId: number;
+  userId: string;
   name: string;
   email: string;
 }

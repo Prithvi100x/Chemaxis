@@ -29,7 +29,7 @@ export default function ReportDetail() {
   const [showSample, setShowSample] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const id = Number(params?.id);
+  const id = params?.id ?? "";
 
   useEffect(() => {
     if (!id) return;

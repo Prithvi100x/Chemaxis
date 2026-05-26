@@ -1,25 +1,13 @@
 import { Router } from "express";
-import { db, reportsTable, purchasesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth.js";
+import mongoose from "mongoose";
+import { Report, Purchase } from "@workspace/db";
 
 const router = Router();
 
 router.get("/reports", async (req, res) => {
   try {
-    const reports = await db.select({
-      id: reportsTable.id,
-      title: reportsTable.title,
-      description: reportsTable.description,
-      category: reportsTable.category,
-      sourceLanguage: reportsTable.sourceLanguage,
-      priceCents: reportsTable.priceCents,
-      tags: reportsTable.tags,
-      pageCount: reportsTable.pageCount,
-      sampleContent: reportsTable.sampleContent,
-      createdAt: reportsTable.createdAt,
-    }).from(reportsTable).orderBy(reportsTable.createdAt);
-    res.json(reports);
+    const reports = await Report.find().sort({ createdAt: 1 });
+    res.json(reports.map(r => r.toJSON()));
   } catch (err) {
     req.log.error({ err }, "List reports error");
     res.status(500).json({ error: "Failed to fetch reports" });
@@ -28,42 +16,37 @@ router.get("/reports", async (req, res) => {
 
 router.get("/reports/:id", async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const [report] = await db.select({
-      id: reportsTable.id,
-      title: reportsTable.title,
-      description: reportsTable.description,
-      category: reportsTable.category,
-      sourceLanguage: reportsTable.sourceLanguage,
-      priceCents: reportsTable.priceCents,
-      tags: reportsTable.tags,
-      pageCount: reportsTable.pageCount,
-      sampleContent: reportsTable.sampleContent,
-      createdAt: reportsTable.createdAt,
-    }).from(reportsTable).where(eq(reportsTable.id, id)).limit(1);
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(404).json({ error: "Report not found" });
+      return;
+    }
+    const report = await Report.findById(id);
     if (!report) { res.status(404).json({ error: "Report not found" }); return; }
 
     let purchased = false;
     const userId = req.jwtUser?.userId;
-    if (userId) {
-      const [p] = await db.select().from(purchasesTable)
-        .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, id))).limit(1);
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      const p = await Purchase.findOne({ userId, reportId: id });
       purchased = !!p;
     }
 
-    res.json({ ...report, purchased });
+    res.json({ ...report.toJSON(), purchased });
   } catch (err) {
     req.log.error({ err }, "Get report error");
     res.status(500).json({ error: "Failed to fetch report" });
   }
 });
 
-router.get("/reports/:id/purchases", requireAuth, async (req, res) => {
+router.get("/reports/:id/purchases", async (req, res) => {
   try {
-    const reportId = Number(req.params.id);
-    const userId = req.jwtUser!.userId;
-    const [purchase] = await db.select().from(purchasesTable)
-      .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, reportId))).limit(1);
+    const { id } = req.params;
+    const userId = req.jwtUser?.userId;
+    if (!userId || !mongoose.Types.ObjectId.isValid(id)) {
+      res.json({ purchased: false });
+      return;
+    }
+    const purchase = await Purchase.findOne({ userId, reportId: id });
     res.json({ purchased: !!purchase });
   } catch (err) {
     req.log.error({ err }, "Check purchase error");

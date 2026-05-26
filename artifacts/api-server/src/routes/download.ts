@@ -1,34 +1,36 @@
 import { Router } from "express";
-import { db, generatedReportsTable, purchasesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import mongoose from "mongoose";
+import { GeneratedReport, Purchase } from "@workspace/db";
 import { requireAuth } from "../middleware/auth.js";
 import PDFDocument from "pdfkit";
 
 const router = Router();
 
 router.get("/generated/:id/download", requireAuth, async (req, res) => {
-  const genId = Number(req.params.id);
+  const genId = req.params.id;
   const userId = req.jwtUser!.userId;
 
+  if (!mongoose.Types.ObjectId.isValid(genId)) {
+    res.status(404).json({ error: "Report not found" });
+    return;
+  }
+
   try {
-    const [gen] = await db.select().from(generatedReportsTable)
-      .where(and(eq(generatedReportsTable.id, genId), eq(generatedReportsTable.userId, userId))).limit(1);
-
+    const gen = await GeneratedReport.findOne({ _id: genId, userId });
     if (!gen) { res.status(404).json({ error: "Report not found" }); return; }
-    if (gen.status !== "done") { res.status(400).json({ error: "Report is not ready yet" }); return; }
+    if (gen.get("status") !== "done") { res.status(400).json({ error: "Report is not ready yet" }); return; }
 
-    const [purchase] = await db.select().from(purchasesTable)
-      .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, gen.reportId))).limit(1);
+    const purchase = await Purchase.findOne({ userId, reportId: gen.get("reportId") });
     if (!purchase) { res.status(403).json({ error: "Please purchase this report to download it" }); return; }
 
-    const contentData = gen.content as Record<string, unknown> ?? {};
+    const contentData = (gen.get("content") as Record<string, unknown>) ?? {};
     const raw: string = (contentData.raw as string) ?? "";
     const sections: Record<string, string> = (contentData.sections as Record<string, string>) ?? {};
     const reportTitle: string = (contentData.reportTitle as string) ?? "Chemical Market Report";
     const targetLanguage: string = (contentData.targetLanguage as string) ?? "en";
     const generatedAt: string = (contentData.generatedAt as string) ?? new Date().toISOString();
 
-    const doc = new PDFDocument({ margin: 60, size: "A4" });
+    const doc = new PDFDocument({ margin: 60, size: "A4", bufferPages: true });
     const filename = `chemaxis-report-${genId}.pdf`;
 
     res.setHeader("Content-Type", "application/pdf");

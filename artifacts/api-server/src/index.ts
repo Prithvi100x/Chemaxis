@@ -1,6 +1,6 @@
 import app from "./app.js";
 import { logger } from "./lib/logger.js";
-import { db, reportsTable } from "@workspace/db";
+import { connectDB, Report } from "@workspace/db";
 
 const rawPort = process.env["PORT"];
 
@@ -61,20 +61,32 @@ const SEED_REPORTS = [
 
 async function seedReports() {
   try {
-    const existing = await db.select({ id: reportsTable.id }).from(reportsTable).limit(1);
-    if (existing.length > 0) return;
-    await db.insert(reportsTable).values(SEED_REPORTS);
+    const count = await Report.countDocuments();
+    if (count > 0) return;
+    await Report.insertMany(SEED_REPORTS);
     logger.info("Seeded 6 reports");
   } catch (err) {
     logger.error({ err }, "Failed to seed reports");
   }
 }
 
-app.listen(port, async (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
+async function start() {
+  try {
+    await connectDB();
+    logger.info("Connected to MongoDB");
+    await seedReports();
+  } catch (err) {
+    logger.error({ err }, "Failed to connect to MongoDB");
     process.exit(1);
   }
-  logger.info({ port }, "Server listening");
-  await seedReports();
-});
+
+  app.listen(port, (err) => {
+    if (err) {
+      logger.error({ err }, "Error listening on port");
+      process.exit(1);
+    }
+    logger.info({ port }, "Server listening");
+  });
+}
+
+start();
