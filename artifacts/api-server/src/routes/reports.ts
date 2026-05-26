@@ -41,16 +41,13 @@ router.get("/reports/:id", async (req, res) => {
       sampleContent: reportsTable.sampleContent,
       createdAt: reportsTable.createdAt,
     }).from(reportsTable).where(eq(reportsTable.id, id)).limit(1);
-    if (!report) {
-      res.status(404).json({ error: "Report not found" });
-      return;
-    }
+    if (!report) { res.status(404).json({ error: "Report not found" }); return; }
 
     let purchased = false;
-    if (req.session?.userId) {
+    const userId = req.jwtUser?.userId;
+    if (userId) {
       const [p] = await db.select().from(purchasesTable)
-        .where(and(eq(purchasesTable.userId, req.session.userId), eq(purchasesTable.reportId, id)))
-        .limit(1);
+        .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, id))).limit(1);
       purchased = !!p;
     }
 
@@ -64,10 +61,9 @@ router.get("/reports/:id", async (req, res) => {
 router.get("/reports/:id/purchases", requireAuth, async (req, res) => {
   try {
     const reportId = Number(req.params.id);
-    const userId = req.session!.userId!;
+    const userId = req.jwtUser!.userId;
     const [purchase] = await db.select().from(purchasesTable)
-      .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, reportId)))
-      .limit(1);
+      .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, reportId))).limit(1);
     res.json({ purchased: !!purchase });
   } catch (err) {
     req.log.error({ err }, "Check purchase error");

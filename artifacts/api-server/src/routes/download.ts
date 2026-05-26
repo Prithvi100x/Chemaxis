@@ -8,30 +8,18 @@ const router = Router();
 
 router.get("/generated/:id/download", requireAuth, async (req, res) => {
   const genId = Number(req.params.id);
-  const userId = req.session!.userId!;
+  const userId = req.jwtUser!.userId;
 
   try {
     const [gen] = await db.select().from(generatedReportsTable)
-      .where(and(eq(generatedReportsTable.id, genId), eq(generatedReportsTable.userId, userId)))
-      .limit(1);
+      .where(and(eq(generatedReportsTable.id, genId), eq(generatedReportsTable.userId, userId))).limit(1);
 
-    if (!gen) {
-      res.status(404).json({ error: "Report not found" });
-      return;
-    }
-    if (gen.status !== "done") {
-      res.status(400).json({ error: "Report is not ready yet" });
-      return;
-    }
+    if (!gen) { res.status(404).json({ error: "Report not found" }); return; }
+    if (gen.status !== "done") { res.status(400).json({ error: "Report is not ready yet" }); return; }
 
     const [purchase] = await db.select().from(purchasesTable)
-      .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, gen.reportId)))
-      .limit(1);
-
-    if (!purchase) {
-      res.status(403).json({ error: "Please purchase this report to download it" });
-      return;
-    }
+      .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, gen.reportId))).limit(1);
+    if (!purchase) { res.status(403).json({ error: "Please purchase this report to download it" }); return; }
 
     const contentData = gen.content as Record<string, unknown> ?? {};
     const raw: string = (contentData.raw as string) ?? "";
@@ -58,7 +46,6 @@ router.get("/generated/:id/download", requireAuth, async (req, res) => {
     doc.moveDown(0.5);
     doc.fill("#64748B").fontSize(10).font("Helvetica").text("Market Intelligence Report — Powered by AI", { align: "center" });
     doc.moveDown(2);
-
     doc.moveTo(60, doc.y).lineTo(doc.page.width - 60, doc.y).stroke("#E2E8F0");
     doc.moveDown(1);
 

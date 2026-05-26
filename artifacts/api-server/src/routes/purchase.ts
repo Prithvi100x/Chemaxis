@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, reportsTable, purchasesTable, generatedReportsTable } from "@workspace/db";
+import { db, reportsTable, purchasesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.js";
 
@@ -7,7 +7,7 @@ const router = Router();
 
 router.post("/purchase", requireAuth, async (req, res) => {
   const { reportId, generatedReportId } = req.body;
-  const userId = req.session!.userId!;
+  const userId = req.jwtUser!.userId;
 
   if (!reportId) {
     res.status(400).json({ error: "reportId is required" });
@@ -22,16 +22,14 @@ router.post("/purchase", requireAuth, async (req, res) => {
     }
 
     const existing = await db.select().from(purchasesTable)
-      .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, reportId)))
-      .limit(1);
+      .where(and(eq(purchasesTable.userId, userId), eq(purchasesTable.reportId, reportId))).limit(1);
     if (existing.length > 0) {
       res.json({ ok: true, purchaseId: existing[0].id, alreadyOwned: true });
       return;
     }
 
     const [purchase] = await db.insert(purchasesTable).values({
-      userId,
-      reportId,
+      userId, reportId,
       generatedReportId: generatedReportId ?? null,
       amountCents: report.priceCents,
       status: "completed",
@@ -45,7 +43,7 @@ router.post("/purchase", requireAuth, async (req, res) => {
 });
 
 router.get("/purchases", requireAuth, async (req, res) => {
-  const userId = req.session!.userId!;
+  const userId = req.jwtUser!.userId;
   try {
     const purchases = await db.select({
       id: purchasesTable.id,

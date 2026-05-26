@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, reportsTable, generatedReportsTable, purchasesTable } from "@workspace/db";
+import { db, reportsTable, generatedReportsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth.js";
 import { openai } from "@workspace/integrations-openai-ai-server";
@@ -8,7 +8,7 @@ const router = Router();
 
 router.post("/reports/:id/generate", requireAuth, async (req, res) => {
   const reportId = Number(req.params.id);
-  const userId = req.session!.userId!;
+  const userId = req.jwtUser!.userId;
   const { targetLanguage = "en", customNotes = "" } = req.body;
 
   const [report] = await db.select().from(reportsTable).where(eq(reportsTable.id, reportId)).limit(1);
@@ -18,17 +18,12 @@ router.post("/reports/:id/generate", requireAuth, async (req, res) => {
   }
 
   const [gen] = await db.insert(generatedReportsTable).values({
-    userId,
-    reportId,
-    targetLanguage,
-    customNotes,
-    status: "processing",
+    userId, reportId, targetLanguage, customNotes, status: "processing",
   }).returning();
 
   res.json({ id: gen.id, status: "processing" });
 
   try {
-
     const langLabel: Record<string, string> = { en: "English", zh: "Chinese", ar: "Arabic", de: "German", fr: "French" };
     const targetLangName = langLabel[targetLanguage] ?? targetLanguage;
 
@@ -58,7 +53,7 @@ Context data: ${JSON.stringify(sampleData)}
 Write the full report in ${targetLangName}. Be specific with numbers and percentages where possible.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5.1",
+      model: "gpt-4o",
       max_completion_tokens: 8192,
       messages: [
         { role: "system", content: systemPrompt },
@@ -74,23 +69,17 @@ Write the full report in ${targetLangName}. Be specific with numbers and percent
       .where(eq(generatedReportsTable.id, gen.id));
   } catch (err) {
     req.log.error({ err }, "Generate report error");
-    await db.update(generatedReportsTable)
-      .set({ status: "error" })
-      .where(eq(generatedReportsTable.id, gen.id));
+    await db.update(generatedReportsTable).set({ status: "error" }).where(eq(generatedReportsTable.id, gen.id));
   }
 });
 
 router.get("/generated/:id", requireAuth, async (req, res) => {
   const genId = Number(req.params.id);
-  const userId = req.session!.userId!;
+  const userId = req.jwtUser!.userId;
   try {
     const [gen] = await db.select().from(generatedReportsTable)
-      .where(and(eq(generatedReportsTable.id, genId), eq(generatedReportsTable.userId, userId)))
-      .limit(1);
-    if (!gen) {
-      res.status(404).json({ error: "Not found" });
-      return;
-    }
+      .where(and(eq(generatedReportsTable.id, genId), eq(generatedReportsTable.userId, userId))).limit(1);
+    if (!gen) { res.status(404).json({ error: "Not found" }); return; }
     res.json(gen);
   } catch (err) {
     req.log.error({ err }, "Get generated error");
@@ -99,7 +88,7 @@ router.get("/generated/:id", requireAuth, async (req, res) => {
 });
 
 router.get("/my-reports", requireAuth, async (req, res) => {
-  const userId = req.session!.userId!;
+  const userId = req.jwtUser!.userId;
   try {
     const gens = await db.select({
       id: generatedReportsTable.id,

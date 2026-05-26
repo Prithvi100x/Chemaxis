@@ -1,14 +1,11 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
-import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
-import { pool } from "@workspace/db";
-import router from "./routes/index.js";
 import { logger } from "./lib/logger.js";
+import { jwtMiddleware } from "./middleware/auth.js";
+import router from "./routes/index.js";
 import "./types/session.js";
-
-const PgSession = connectPgSimple(session);
 
 const app: Express = express();
 
@@ -37,14 +34,8 @@ const allowedOrigins = (() => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-      if (!allowedOrigins) {
-        callback(null, true);
-        return;
-      }
+      if (!origin) { callback(null, true); return; }
+      if (!allowedOrigins) { callback(null, true); return; }
       const allowed = allowedOrigins.some(
         (o) => o === origin || origin.endsWith(o.replace(/^https?:\/\//, "")),
       );
@@ -56,21 +47,8 @@ app.use(
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
-
-app.use(
-  session({
-    store: new PgSession({ pool, createTableIfMissing: true }),
-    secret: process.env.SESSION_SECRET ?? "chemaxis-dev-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    },
-  }),
-);
+app.use(cookieParser());
+app.use(jwtMiddleware);
 
 app.use("/api", router);
 
