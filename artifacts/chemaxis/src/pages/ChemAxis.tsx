@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from "react";
+import { useAuth } from "@/lib/auth-context";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity, Shield, Zap, Brain, BarChart3, Package,
@@ -635,6 +636,7 @@ function HeroMoleculeBackdrop() {
 function NavBar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -665,12 +667,20 @@ function NavBar() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <a href="/login" className="text-sm font-medium text-[var(--ca-fg)] hover:text-[var(--ca-primary)] transition-colors">
-            Sign In
-          </a>
-          <a href="/register" className="px-5 py-2.5 rounded-lg bg-[var(--ca-primary)] text-white text-sm font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-sm shadow-[rgb(var(--ca-primary-rgb)/0.20)]">
-            Get Started Free
-          </a>
+          {!loading && (user ? (
+            <a href="/dashboard" className="px-5 py-2.5 rounded-lg bg-[var(--ca-primary)] text-white text-sm font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-sm shadow-[rgb(var(--ca-primary-rgb)/0.20)]">
+              Dashboard
+            </a>
+          ) : (
+            <>
+              <a href="/login" className="text-sm font-medium text-[var(--ca-fg)] hover:text-[var(--ca-primary)] transition-colors">
+                Sign In
+              </a>
+              <a href="/register" className="px-5 py-2.5 rounded-lg bg-[var(--ca-primary)] text-white text-sm font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-sm shadow-[rgb(var(--ca-primary-rgb)/0.20)]">
+                Get Started Free
+              </a>
+            </>
+          ))}
           <ThemeToggle />
         </div>
 
@@ -696,8 +706,14 @@ function NavBar() {
               </a>
             ))}
             <div className="h-px bg-[var(--ca-border)] my-2" />
-            <a href="/login" className="text-center py-3 rounded-lg border border-[var(--ca-border)] text-[var(--ca-fg)] font-medium">Sign In</a>
-            <a href="/register" className="text-center py-3 rounded-lg bg-[var(--ca-primary)] text-white font-medium">Get Started Free</a>
+            {user ? (
+              <a href="/dashboard" className="text-center py-3 rounded-lg bg-[var(--ca-primary)] text-white font-medium">Dashboard</a>
+            ) : (
+              <>
+                <a href="/login" className="text-center py-3 rounded-lg border border-[var(--ca-border)] text-[var(--ca-fg)] font-medium">Sign In</a>
+                <a href="/register" className="text-center py-3 rounded-lg bg-[var(--ca-primary)] text-white font-medium">Get Started Free</a>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
