@@ -2,12 +2,13 @@ import { Router } from "express";
 import mongoose from "mongoose";
 import { Report, GeneratedReport } from "@workspace/db";
 import { requireAuth } from "../middleware/auth.js";
+import { getRouteParam } from "./params.js";
 import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
 
 router.post("/reports/:id/generate", requireAuth, async (req, res) => {
-  const reportId = req.params.id;
+  const reportId = getRouteParam(req, "id");
   const userId = req.jwtUser!.userId;
   const { targetLanguage = "en", customNotes = "" } = req.body;
 
@@ -23,13 +24,23 @@ router.post("/reports/:id/generate", requireAuth, async (req, res) => {
   }
 
   const gen = await GeneratedReport.create({
-    userId, reportId, targetLanguage, customNotes, status: "processing",
+    userId,
+    reportId,
+    targetLanguage,
+    customNotes,
+    status: "processing",
   });
 
   res.json({ id: gen._id.toString(), status: "processing" });
 
   try {
-    const langLabel: Record<string, string> = { en: "English", zh: "Chinese", ar: "Arabic", de: "German", fr: "French" };
+    const langLabel: Record<string, string> = {
+      en: "English",
+      zh: "Chinese",
+      ar: "Arabic",
+      de: "German",
+      fr: "French",
+    };
     const targetLangName = langLabel[targetLanguage] ?? targetLanguage;
 
     const systemPrompt = `You are a professional chemical industry analyst who creates detailed market intelligence reports.
@@ -71,7 +82,13 @@ Write the full report in ${targetLangName}. Be specific with numbers and percent
 
     await GeneratedReport.findByIdAndUpdate(gen._id, {
       status: "done",
-      content: { raw: content, sections, generatedAt: new Date().toISOString(), targetLanguage, reportTitle: report.get("title") },
+      content: {
+        raw: content,
+        sections,
+        generatedAt: new Date().toISOString(),
+        targetLanguage,
+        reportTitle: report.get("title"),
+      },
     });
   } catch (err) {
     req.log.error({ err }, "Generate report error");
@@ -80,7 +97,7 @@ Write the full report in ${targetLangName}. Be specific with numbers and percent
 });
 
 router.get("/generated/:id", requireAuth, async (req, res) => {
-  const genId = req.params.id;
+  const genId = getRouteParam(req, "id");
   const userId = req.jwtUser!.userId;
 
   if (!mongoose.Types.ObjectId.isValid(genId)) {
@@ -90,7 +107,10 @@ router.get("/generated/:id", requireAuth, async (req, res) => {
 
   try {
     const gen = await GeneratedReport.findOne({ _id: genId, userId });
-    if (!gen) { res.status(404).json({ error: "Not found" }); return; }
+    if (!gen) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
     res.json(gen.toJSON());
   } catch (err) {
     req.log.error({ err }, "Get generated error");
@@ -102,23 +122,38 @@ router.get("/my-reports", requireAuth, async (req, res) => {
   const userId = req.jwtUser!.userId;
   try {
     const gens = await GeneratedReport.find({ userId })
-      .populate<{ reportId: { _id: mongoose.Types.ObjectId; title: string; category: string } }>("reportId", "title category")
+      .populate<{
+        reportId: {
+          _id: mongoose.Types.ObjectId;
+          title: string;
+          category: string;
+        };
+      }>("reportId", "title category")
       .sort({ createdAt: 1 });
 
-    res.json(gens.map(g => {
-      const reportDoc = g.reportId as unknown as { _id: mongoose.Types.ObjectId; title: string; category: string } | null;
-      return {
-        id: g._id.toString(),
-        reportId: reportDoc?._id?.toString() ?? (g.get("reportId") as mongoose.Types.ObjectId)?.toString(),
-        status: g.get("status"),
-        targetLanguage: g.get("targetLanguage"),
-        customNotes: g.get("customNotes"),
-        createdAt: g.get("createdAt"),
-        reportTitle: reportDoc?.title ?? null,
-        reportCategory: reportDoc?.category ?? null,
-        content: g.get("content"),
-      };
-    }));
+    res.json(
+      gens.map((g) => {
+        const reportDoc = g.reportId as unknown as {
+          _id: mongoose.Types.ObjectId;
+          title: string;
+          category: string;
+        } | null;
+        const rawReportId = g.get(
+          "reportId",
+        ) as unknown as mongoose.Types.ObjectId | null;
+        return {
+          id: g._id.toString(),
+          reportId: reportDoc?._id?.toString() ?? rawReportId?.toString(),
+          status: g.get("status"),
+          targetLanguage: g.get("targetLanguage"),
+          customNotes: g.get("customNotes"),
+          createdAt: g.get("createdAt"),
+          reportTitle: reportDoc?.title ?? null,
+          reportCategory: reportDoc?.category ?? null,
+          content: g.get("content"),
+        };
+      }),
+    );
   } catch (err) {
     req.log.error({ err }, "My reports error");
     res.status(500).json({ error: "Failed to fetch your reports" });
@@ -128,18 +163,30 @@ router.get("/my-reports", requireAuth, async (req, res) => {
 function parseReportSections(raw: string): Record<string, string> {
   const sections: Record<string, string> = {};
   const sectionNames = [
-    "Executive Summary", "Market Overview", "Supply & Demand", "Price Trends",
-    "Key Players", "Regional Breakdown", "Risks & Opportunities", "Outlook",
+    "Executive Summary",
+    "Market Overview",
+    "Supply & Demand",
+    "Price Trends",
+    "Key Players",
+    "Regional Breakdown",
+    "Risks & Opportunities",
+    "Outlook",
   ];
   for (let i = 0; i < sectionNames.length; i++) {
     const name = sectionNames[i];
     const next = sectionNames[i + 1];
-    const startMatch = raw.match(new RegExp(`(?:^|\\n).*${name.replace("&", "[&＆]")}[:\\s]*\\n`, "i"));
+    const startMatch = raw.match(
+      new RegExp(`(?:^|\\n).*${name.replace("&", "[&＆]")}[:\\s]*\\n`, "i"),
+    );
     if (!startMatch) continue;
     const start = (startMatch.index ?? 0) + startMatch[0].length;
     let end = raw.length;
     if (next) {
-      const endMatch = raw.substring(start).match(new RegExp(`(?:^|\\n).*${next.replace("&", "[&＆]")}[:\\s]*\\n`, "i"));
+      const endMatch = raw
+        .substring(start)
+        .match(
+          new RegExp(`(?:^|\\n).*${next.replace("&", "[&＆]")}[:\\s]*\\n`, "i"),
+        );
       if (endMatch) end = start + (endMatch.index ?? raw.length - start);
     }
     sections[name] = raw.substring(start, end).trim();
