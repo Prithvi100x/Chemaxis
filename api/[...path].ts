@@ -15,5 +15,5 @@ export default async function handler(req: any, res: any): Promise<void> {
     req.url = `/api${req.url.startsWith("/") ? req.url : `/${req.url}`}`;
   }
 
-  app(req, res);
+  (app as unknown as (request: unknown, response: unknown) => void)(req, res);
 }
