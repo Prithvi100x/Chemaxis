@@ -7,6 +7,12 @@ import { GeneratedReport } from "./models/GeneratedReport.js";
 export { User, Report, Purchase, GeneratedReport };
 
 export async function connectDB(): Promise<void> {
+  if (mongoose.connection.readyState === 1) return;
+  if (mongoose.connection.readyState === 2) {
+    await mongoose.connection.asPromise();
+    return;
+  }
+
   let uri = process.env.MONGODB_URI;
   if (!uri) throw new Error("MONGODB_URI must be set.");
 

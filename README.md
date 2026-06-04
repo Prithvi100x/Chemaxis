@@ -32,6 +32,12 @@ pnpm run build
 
 ## Deployment
 
+### Vercel
+
+The root `vercel.json` deploys the React website and the `api/[...path].ts` serverless function together, so same-origin calls such as `/api/auth/register` work on `*.vercel.app`. If the Vercel project root is set to `artifacts/chemaxis`, the package-level `artifacts/chemaxis/api/[...path].ts` fallback provides the same API handler. Set `MONGODB_URI` and `JWT_SECRET` in Vercel before testing signup.
+
+### Railway
+
 The repository includes Railway/Nixpacks configuration. The deploy build compiles the React website first and then the API server. The API server serves the built website from `artifacts/chemaxis/dist/public` when those files are present and keeps API routes under `/api`.
 
 Required environment variables:
