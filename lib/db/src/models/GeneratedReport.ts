@@ -1,9 +1,18 @@
 import mongoose from "mongoose";
+import { normalizeMongoDocument, stringifyObjectIdField } from "./serialize.js";
 
 const generatedReportSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    reportId: { type: mongoose.Schema.Types.ObjectId, ref: "Report", required: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    reportId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Report",
+      required: true,
+    },
     targetLanguage: { type: String, default: "en" },
     customNotes: { type: String, default: null },
     status: { type: String, default: "pending" },
@@ -14,15 +23,15 @@ const generatedReportSchema = new mongoose.Schema(
     toJSON: {
       virtuals: true,
       transform: (_doc, ret) => {
-        ret.id = ret._id.toString();
-        ret.reportId = ret.reportId?.toString();
-        ret.userId = ret.userId?.toString();
-        delete ret._id;
-        delete ret.__v;
-        return ret;
+        stringifyObjectIdField(ret, "reportId");
+        stringifyObjectIdField(ret, "userId");
+        return normalizeMongoDocument(ret);
       },
     },
-  }
+  },
 );
 
-export const GeneratedReport = mongoose.model("GeneratedReport", generatedReportSchema);
+export const GeneratedReport = mongoose.model(
+  "GeneratedReport",
+  generatedReportSchema,
+);

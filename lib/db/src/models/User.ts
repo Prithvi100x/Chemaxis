@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { normalizeMongoDocument } from "./serialize.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -13,14 +14,9 @@ const userSchema = new mongoose.Schema(
     timestamps: { createdAt: "createdAt", updatedAt: false },
     toJSON: {
       virtuals: true,
-      transform: (_doc, ret) => {
-        ret.id = ret._id.toString();
-        delete ret._id;
-        delete ret.__v;
-        return ret;
-      },
+      transform: (_doc, ret) => normalizeMongoDocument(ret),
     },
-  }
+  },
 );
 
 export const User = mongoose.model("User", userSchema);

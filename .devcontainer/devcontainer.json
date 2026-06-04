@@ -1,0 +1,23 @@
+{
+  "name": "ChemAxis",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-24-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "corepack enable && corepack prepare pnpm@10 --activate && pnpm install --frozen-lockfile",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  },
+  "forwardPorts": [5173, 8080],
+  "portsAttributes": {
+    "5173": { "label": "ChemAxis web" },
+    "8080": { "label": "ChemAxis API" }
+  }
+}
