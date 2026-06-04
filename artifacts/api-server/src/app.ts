@@ -67,7 +67,7 @@ app.use(jwtMiddleware);
 
 app.use("/api", router);
 
-if (process.env.NODE_ENV === "production" && existsSync(clientDistPath)) {
+if (existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
   app.get(/^(?!\/api).*/, (_req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));

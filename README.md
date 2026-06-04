@@ -32,7 +32,7 @@ pnpm run build
 
 ## Deployment
 
-The repository includes Railway/Nixpacks configuration. The deploy build compiles the React website first and then the API server. In production, the API server serves the built website from `artifacts/chemaxis/dist/public` and keeps API routes under `/api`.
+The repository includes Railway/Nixpacks configuration. The deploy build compiles the React website first and then the API server. The API server serves the built website from `artifacts/chemaxis/dist/public` when those files are present and keeps API routes under `/api`.
 
 Required environment variables:
 
@@ -44,3 +44,18 @@ Required environment variables:
 - `OPENAI_API_KEY` — optional, only needed for AI report generation.
 
 If the website and API are deployed separately, set `VITE_API_URL` before building the website so client requests point to the API origin.
+
+### Railway CI/CD
+
+This repo includes `.github/workflows/deploy-railway.yml` and `scripts/deploy-railway.sh` so GitHub can deploy the app automatically. Add these repository settings before running the workflow:
+
+- Secret `RAILWAY_TOKEN` — a Railway project token for the target environment.
+- Optional variable `RAILWAY_PROJECT_ID` — Railway project id when the repo is not linked.
+- Optional variable `RAILWAY_ENVIRONMENT` — target environment name or id, for example `production`.
+- Optional variable `RAILWAY_SERVICE` — target service name or id if the Railway project has multiple services.
+
+You can also deploy from a configured terminal with:
+
+```bash
+RAILWAY_TOKEN=... pnpm run deploy:railway
+```

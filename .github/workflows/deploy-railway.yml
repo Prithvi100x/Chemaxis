@@ -1,0 +1,48 @@
+name: Deploy to Railway
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+concurrency:
+  group: railway-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID }}
+      RAILWAY_ENVIRONMENT: ${{ vars.RAILWAY_ENVIRONMENT }}
+      RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup pnpm
+        run: corepack prepare pnpm@10 --activate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build deploy artifacts
+        run: pnpm --filter @workspace/chemaxis run build && pnpm --filter @workspace/api-server run build
+
+      - name: Deploy
+        run: scripts/deploy-railway.sh
