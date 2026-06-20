@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/lib/auth-context";
-import { FlaskConical, Eye, EyeOff } from "lucide-react";
+import { FlaskConical, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
 
 function GoogleIcon() {
   return (
@@ -20,6 +20,38 @@ const GOOGLE_ERRORS: Record<string, string> = {
   google_cancelled: "Google Sign-In was cancelled.",
 };
 
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+function validateEmail(email: string): string {
+  if (!email) return "Email is required";
+  if (!EMAIL_REGEX.test(email)) return "Please enter a valid email address";
+  const domain = email.split("@")[1]?.toLowerCase();
+  const blocked = ["test.com", "example.com", "fake.com", "noreply.com", "mailinator.com", "tempmail.com", "guerrillamail.com", "throwaway.email", "yopmail.com", "trashmail.com"];
+  if (blocked.some(b => domain === b)) return "Please use a real email address";
+  return "";
+}
+
+function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score <= 1) return { score, label: "Weak", color: "#EF4444" };
+  if (score <= 2) return { score, label: "Fair", color: "#F97316" };
+  if (score <= 3) return { score, label: "Good", color: "#EAB308" };
+  if (score <= 4) return { score, label: "Strong", color: "#22C55E" };
+  return { score, label: "Very strong", color: "#16A34A" };
+}
+
+const PW_RULES = [
+  { label: "At least 8 characters", test: (pw: string) => pw.length >= 8 },
+  { label: "One uppercase letter", test: (pw: string) => /[A-Z]/.test(pw) },
+  { label: "One number", test: (pw: string) => /[0-9]/.test(pw) },
+  { label: "One special character (!@#$…)", test: (pw: string) => /[^A-Za-z0-9]/.test(pw) },
+];
+
 export default function Register() {
   const { register } = useAuth();
   const [, setLocation] = useLocation();
@@ -29,16 +61,27 @@ export default function Register() {
 
   const [form, setForm] = useState({ name: "", email: "", company: "", password: "", confirm: "" });
   const [showPw, setShowPw] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [error, setError] = useState(oauthError);
   const [loading, setLoading] = useState(false);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value }));
+  const touch = (k: string) => () => setTouched(t => ({ ...t, [k]: true }));
+
+  const emailError = touched.email ? validateEmail(form.email) : "";
+  const pwStrength = getPasswordStrength(form.password);
+  const confirmError = touched.confirm && form.confirm && form.password !== form.confirm ? "Passwords do not match" : "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({ name: true, email: true, password: true, confirm: true });
     setError("");
-    if (form.password !== form.confirm) { setError("Passwords do not match"); return; }
+
+    const emailErr = validateEmail(form.email);
+    if (emailErr) { setError(emailErr); return; }
     if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (form.password !== form.confirm) { setError("Passwords do not match"); return; }
+
     setLoading(true);
     try {
       await register(form.name, form.email, form.password, form.company || undefined);
@@ -67,7 +110,6 @@ export default function Register() {
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>
           )}
 
-          {/* Google Sign-Up */}
           <a
             href="/api/auth/google"
             className="w-full flex items-center justify-center gap-3 py-3 border border-[#E2E8F0] rounded-xl bg-white hover:bg-[#FAFAF8] transition-colors text-sm font-medium text-[#1E293B] mb-4"
@@ -85,30 +127,81 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-[#1E293B] mb-1.5">Full Name</label>
-              <input value={form.name} onChange={set("name")} required className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]" placeholder="Jane Smith" />
+              <input
+                value={form.name} onChange={set("name")} onBlur={touch("name")} required
+                className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]"
+                placeholder="Jane Smith"
+              />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-[#1E293B] mb-1.5">Email Address</label>
-              <input type="email" value={form.email} onChange={set("email")} required className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]" placeholder="you@company.com" />
+              <input
+                type="email" value={form.email} onChange={set("email")} onBlur={touch("email")} required
+                className={`w-full px-4 py-3 rounded-xl border bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46] ${emailError ? "border-red-400" : "border-[#E2E8F0]"}`}
+                placeholder="you@gmail.com"
+              />
+              {emailError && <p className="mt-1 text-xs text-red-600">{emailError}</p>}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-[#1E293B] mb-1.5">Company <span className="text-[#94A3B8] font-normal">(optional)</span></label>
-              <input value={form.company} onChange={set("company")} className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]" placeholder="Acme Chemicals Ltd." />
+              <input
+                value={form.company} onChange={set("company")}
+                className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]"
+                placeholder="Acme Chemicals Ltd."
+              />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-[#1E293B] mb-1.5">Password</label>
               <div className="relative">
-                <input type={showPw ? "text" : "password"} value={form.password} onChange={set("password")} required className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46] pr-12" placeholder="Min. 8 characters" />
+                <input
+                  type={showPw ? "text" : "password"} value={form.password} onChange={set("password")} onBlur={touch("password")} required
+                  className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46] pr-12"
+                  placeholder="Min. 8 characters"
+                />
                 <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#2D4A46]">
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+
+              {form.password && (
+                <div className="mt-2">
+                  <div className="flex gap-1 mb-1">
+                    {[1,2,3,4,5].map(i => (
+                      <div key={i} className="flex-1 h-1 rounded-full transition-all duration-300" style={{ backgroundColor: i <= pwStrength.score ? pwStrength.color : "#E2E8F0" }} />
+                    ))}
+                  </div>
+                  <p className="text-xs font-medium" style={{ color: pwStrength.color }}>{pwStrength.label}</p>
+                  <div className="mt-2 space-y-1">
+                    {PW_RULES.map(rule => (
+                      <div key={rule.label} className="flex items-center gap-1.5">
+                        {rule.test(form.password)
+                          ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                          : <XCircle className="w-3.5 h-3.5 text-[#CBD5E1] shrink-0" />}
+                        <span className={`text-xs ${rule.test(form.password) ? "text-green-600" : "text-[#94A3B8]"}`}>{rule.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-[#1E293B] mb-1.5">Confirm Password</label>
-              <input type={showPw ? "text" : "password"} value={form.confirm} onChange={set("confirm")} required className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46]" placeholder="••••••••" />
+              <input
+                type={showPw ? "text" : "password"} value={form.confirm} onChange={set("confirm")} onBlur={touch("confirm")} required
+                className={`w-full px-4 py-3 rounded-xl border bg-[#FAFAF8] text-sm focus:outline-none focus:ring-2 focus:ring-[#2D4A46] ${confirmError ? "border-red-400" : "border-[#E2E8F0]"}`}
+                placeholder="••••••••"
+              />
+              {confirmError && <p className="mt-1 text-xs text-red-600">{confirmError}</p>}
             </div>
-            <button type="submit" disabled={loading} className="w-full py-3 bg-[#2D4A46] hover:bg-[#1E3330] text-white font-semibold rounded-xl transition-colors disabled:opacity-60 mt-2">
+
+            <button
+              type="submit" disabled={loading}
+              className="w-full py-3 bg-[#2D4A46] hover:bg-[#1E3330] text-white font-semibold rounded-xl transition-colors disabled:opacity-60 mt-2"
+            >
               {loading ? "Creating account…" : "Create Account"}
             </button>
           </form>

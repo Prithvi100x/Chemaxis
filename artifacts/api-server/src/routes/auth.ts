@@ -7,12 +7,25 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+const BLOCKED_DOMAINS = new Set(["test.com","example.com","fake.com","noreply.com","mailinator.com","tempmail.com","guerrillamail.com","throwaway.email","yopmail.com","trashmail.com"]);
+
+function validateEmail(email: string): string | null {
+  if (!EMAIL_REGEX.test(email)) return "Please enter a valid email address";
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (domain && BLOCKED_DOMAINS.has(domain)) return "Please use a real email address";
+  return null;
+}
+
 router.post("/auth/register", async (req, res) => {
   const { name, email, password, company } = req.body;
   if (!name || !email || !password) {
     res.status(400).json({ error: "Name, email, and password are required" });
     return;
   }
+  const emailErr = validateEmail(email);
+  if (emailErr) { res.status(400).json({ error: emailErr }); return; }
+  if (password.length < 8) { res.status(400).json({ error: "Password must be at least 8 characters" }); return; }
   try {
     const existing = await User.findOne({ email });
     if (existing) {
