@@ -1,0 +1,33 @@
+==> Downloading cache...
+==> Cloning from https://github.com/Prithvi100x/Chemaxis
+==> Checking out commit ed02cb7fbf63b76986de313653946c2f571d70f0 in branch main
+==> Downloaded 111MB in 3s. Extraction took 6s.
+==> Requesting Node.js version 20
+==> Using Node.js version 20.20.2 via environment variable NODE_VERSION
+==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+==> Installing Node.js version 20.20.2...
+==> Running build command 'npx pnpm@10 install --no-frozen-lockfile && npx pnpm@10 --filter @workspace/api-server run build'...
+> @workspace/api-server@0.0.0 build /opt/render/project/src/artifacts/api-server
+> node ./build.mjs
+  dist/index.mjs                       4.2mb ⚠️
+  dist/pino-worker.mjs               153.5kb
+  dist/pino-file.mjs                 142.1kb
+  dist/pino-pretty.mjs               114.6kb
+  dist/thread-stream-worker.mjs        7.4kb
+  dist/index.mjs.map                   7.5mb
+  dist/pino-worker.mjs.map           256.9kb
+  dist/pino-file.mjs.map             229.0kb
+  dist/pino-pretty.mjs.map           203.9kb
+  dist/thread-stream-worker.mjs.map   12.0kb
+⚡ Done in 666ms
+==> Uploading build...
+==> Uploaded in 4.1s. Compression took 4.6s
+==> Build successful 🎉
+==> Deploying...
+==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+==> Running 'node artifacts/api-server/dist/index.mjs'
+==> Exited with status 1
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+{"level":50,"time":1782243937169,"pid":71,"hostname":"srv-d8tdtgkm0tmc73c8qcbg-hibernate-5997c47859-wnt8z","err":{"type":"MongoServerError","message":"bad auth : authentication failed","stack":"MongoServerError: bad auth : authentication failed\n    at _Connection.sendCommand (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:54179:21)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async _Connection.command (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:54201:26)\n    at async continueScramConversation (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:59715:17)\n    at async executeScram (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:59669:7)\n    at async ScramSHA1.auth (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:59632:16)\n    at async performInitialHandshake (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:54497:11)\n    at async connect (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:54427:9)","errorLabelSet":{},"errorResponse":{"ok":0,"errmsg":"bad auth : authentication failed","code":8000,"codeName":"AtlasError"},"ok":0,"code":8000,"codeName":"AtlasError","connectionGeneration":0},"msg":"Failed to connect to MongoDB"}
+==> Running 'node artifacts/api-server/dist/index.mjs'
+{"level":50,"time":1782243950382,"pid":52,"hostname":"srv-d8tdtgkm0tmc73c8qcbg-hibernate-5997c47859-wnt8z","err":{"type":"MongoServerError","message":"bad auth : authentication failed","stack":"MongoServerError: bad auth : authentication failed\n    at _Connection.sendCommand (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:54179:21)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async _Connection.command (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:54201:26)\n    at async continueScramConversation (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:59715:17)\n    at async executeScram (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:59669:7)\n    at async ScramSHA1.auth (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:59632:16)\n    at async performInitialHandshake (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:54497:11)\n    at async connect (file:///opt/render/project/src/artifacts/api-server/dist/index.mjs:54427:9)","errorLabelSet":{},"errorResponse":{"ok":0,"errmsg":"bad auth : authentication failed","code":8000,"codeName":"AtlasError"},"ok":0,"code":8000,"codeName":"AtlasError","connectionGeneration":0},"msg":"Failed to connect to MongoDB"}
