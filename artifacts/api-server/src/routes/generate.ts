@@ -2,9 +2,39 @@ import { Router } from "express";
 import mongoose from "mongoose";
 import { Report, GeneratedReport } from "@workspace/db";
 import { requireAuth } from "../middleware/auth.js";
-import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
+
+async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise<string> {
+  const apiKey = process.env.OPEN_ROUTER;
+  if (!apiKey) throw new Error("OPEN_ROUTER API key is not set");
+
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://chemaxis.app",
+      "X-Title": "ChemAxis",
+    },
+    body: JSON.stringify({
+      model: "meta-llama/llama-4-maverick",
+      max_tokens: 8192,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`OpenRouter error ${res.status}: ${err}`);
+  }
+
+  const data = await res.json() as { choices: { message: { content: string } }[] };
+  return data.choices[0]?.message?.content ?? "";
+}
 
 router.post("/reports/:id/generate", requireAuth, async (req, res) => {
   const reportId = req.params.id;
@@ -57,16 +87,7 @@ Context data: ${JSON.stringify(sampleData)}
 
 Write the full report in ${targetLangName}. Be specific with numbers and percentages where possible.`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      max_completion_tokens: 8192,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    });
-
-    const content = response.choices[0]?.message?.content ?? "";
+    const content = await callOpenRouter(systemPrompt, userPrompt);
     const sections = parseReportSections(content);
 
     await GeneratedReport.findByIdAndUpdate(gen._id, {
