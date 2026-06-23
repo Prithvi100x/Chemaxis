@@ -7,7 +7,7 @@ import PDFDocument from "pdfkit";
 const router = Router();
 
 router.get("/generated/:id/download", requireAuth, async (req, res) => {
-  const genId = req.params.id;
+  const genId = String(req.params.id);
   const userId = req.jwtUser!.userId;
 
   if (!mongoose.Types.ObjectId.isValid(genId)) {

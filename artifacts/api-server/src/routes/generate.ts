@@ -37,7 +37,7 @@ async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise
 }
 
 router.post("/reports/:id/generate", requireAuth, async (req, res) => {
-  const reportId = req.params.id;
+  const reportId = String(req.params.id);
   const userId = req.jwtUser!.userId;
   const { targetLanguage = "en", customNotes = "" } = req.body;
 
@@ -101,7 +101,7 @@ Write the full report in ${targetLangName}. Be specific with numbers and percent
 });
 
 router.get("/generated/:id", requireAuth, async (req, res) => {
-  const genId = req.params.id;
+  const genId = String(req.params.id);
   const userId = req.jwtUser!.userId;
 
   if (!mongoose.Types.ObjectId.isValid(genId)) {
@@ -123,20 +123,22 @@ router.get("/my-reports", requireAuth, async (req, res) => {
   const userId = req.jwtUser!.userId;
   try {
     const gens = await GeneratedReport.find({ userId })
-      .populate<{ reportId: { _id: mongoose.Types.ObjectId; title: string; category: string } }>("reportId", "title category")
+      .populate("reportId", "title category")
       .sort({ createdAt: 1 });
 
     res.json(gens.map(g => {
-      const reportDoc = g.reportId as unknown as { _id: mongoose.Types.ObjectId; title: string; category: string } | null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const reportDoc = g.reportId as any;
+      const isPopulated = reportDoc && typeof reportDoc === "object" && "_id" in reportDoc;
       return {
         id: g._id.toString(),
-        reportId: reportDoc?._id?.toString() ?? (g.get("reportId") as mongoose.Types.ObjectId)?.toString(),
+        reportId: isPopulated ? reportDoc._id?.toString() : reportDoc?.toString(),
         status: g.get("status"),
         targetLanguage: g.get("targetLanguage"),
         customNotes: g.get("customNotes"),
         createdAt: g.get("createdAt"),
-        reportTitle: reportDoc?.title ?? null,
-        reportCategory: reportDoc?.category ?? null,
+        reportTitle: isPopulated ? (reportDoc.title ?? null) : null,
+        reportCategory: isPopulated ? (reportDoc.category ?? null) : null,
         content: g.get("content"),
       };
     }));

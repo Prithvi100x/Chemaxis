@@ -13,10 +13,11 @@ const userSchema = new mongoose.Schema(
     timestamps: { createdAt: "createdAt", updatedAt: false },
     toJSON: {
       virtuals: true,
-      transform: (_doc, ret) => {
-        ret.id = ret._id.toString();
-        delete ret._id;
-        delete ret.__v;
+      transform: (_doc: unknown, ret: Record<string, any>) => {
+        ret["id"] = ret["_id"]?.toString();
+        const r = ret as Record<string, unknown>;
+        delete r["_id"];
+        delete r["__v"];
         return ret;
       },
     },

@@ -1,0 +1,51 @@
+==> Cloning from https://github.com/Prithvi100x/Chemaxis
+==> Checking out commit 92c80af59285e83690c7cca24c35a15787f5b59f in branch main
+==> Using Node.js version 24.14.1 (default)
+==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+==> Running build command 'pnpm install --frozen-lockfile; pnpm run build'...
+> workspace@0.0.0 build /opt/render/project/src
+> pnpm run typecheck && pnpm -r --if-present run build
+> workspace@0.0.0 typecheck /opt/render/project/src
+> pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+> workspace@0.0.0 typecheck:libs /opt/render/project/src
+> tsc --build
+lib/db/src/models/GeneratedReport.ts(17,13): error TS2339: Property 'id' does not exist on type 'FlatRecord<{ userId: ObjectId; reportId: ObjectId; status: string; targetLanguage: string; customNotes?: string | null | undefined; content?: any; }> & { ...; } & { ...; }'.
+lib/db/src/models/GeneratedReport.ts(18,9): error TS2322: Type 'string' is not assignable to type 'ObjectId'.
+lib/db/src/models/GeneratedReport.ts(19,9): error TS2322: Type 'string' is not assignable to type 'ObjectId'.
+lib/db/src/models/GeneratedReport.ts(20,16): error TS2790: The operand of a 'delete' operator must be optional.
+lib/db/src/models/GeneratedReport.ts(21,16): error TS2790: The operand of a 'delete' operator must be optional.
+lib/db/src/models/Purchase.ts(16,13): error TS2339: Property 'id' does not exist on type 'FlatRecord<{ userId: ObjectId; reportId: ObjectId; amountCents: number; status: string; generatedReportId?: ObjectId | null | undefined; }> & { ...; } & { ...; }'.
+lib/db/src/models/Purchase.ts(17,9): error TS2322: Type 'string' is not assignable to type 'ObjectId'.
+lib/db/src/models/Purchase.ts(18,9): error TS2322: Type 'string' is not assignable to type 'ObjectId'.
+lib/db/src/models/Purchase.ts(19,36): error TS2322: Type 'string' is not assignable to type 'ObjectId'.
+lib/db/src/models/Purchase.ts(20,16): error TS2790: The operand of a 'delete' operator must be optional.
+lib/db/src/models/Purchase.ts(21,16): error TS2790: The operand of a 'delete' operator must be optional.
+lib/db/src/models/Report.ts(20,13): error TS2339: Property 'id' does not exist on type 'FlatRecord<{ description: string; title: string; category: string; sourceLanguage: string; priceCents: number; tags: string[]; pageCount: number; sampleContent?: any; fullContent?: any; }> & { ...; } & { ...; }'.
+lib/db/src/models/Report.ts(21,16): error TS2790: The operand of a 'delete' operator must be optional.
+lib/db/src/models/Report.ts(22,16): error TS2790: The operand of a 'delete' operator must be optional.
+lib/db/src/models/User.ts(17,13): error TS2339: Property 'id' does not exist on type 'FlatRecord<{ name: string; email: string; passwordHash?: string | null | undefined; googleId?: string | null | undefined; avatarUrl?: string | null | undefined; company?: string | null | undefined; }> & { ...; } & { ...; }'.
+lib/db/src/models/User.ts(18,16): error TS2790: The operand of a 'delete' operator must be optional.
+lib/db/src/models/User.ts(19,16): error TS2790: The operand of a 'delete' operator must be optional.
+lib/db/src/schema/conversations.ts(1,50): error TS2307: Cannot find module 'drizzle-orm/pg-core' or its corresponding type declarations.
+lib/db/src/schema/conversations.ts(2,36): error TS2307: Cannot find module 'drizzle-zod' or its corresponding type declarations.
+lib/db/src/schema/conversations.ts(3,19): error TS2307: Cannot find module 'zod/v4' or its corresponding type declarations.
+lib/db/src/schema/generated-reports.ts(1,66): error TS2307: Cannot find module 'drizzle-orm/pg-core' or its corresponding type declarations.
+lib/db/src/schema/generated-reports.ts(2,36): error TS2307: Cannot find module 'drizzle-zod' or its corresponding type declarations.
+lib/db/src/schema/generated-reports.ts(3,19): error TS2307: Cannot find module 'zod/v4' or its corresponding type declarations.
+lib/db/src/schema/messages.ts(1,59): error TS2307: Cannot find module 'drizzle-orm/pg-core' or its corresponding type declarations.
+lib/db/src/schema/messages.ts(2,36): error TS2307: Cannot find module 'drizzle-zod' or its corresponding type declarations.
+lib/db/src/schema/messages.ts(3,19): error TS2307: Cannot find module 'zod/v4' or its corresponding type declarations.
+lib/db/src/schema/purchases.ts(1,59): error TS2307: Cannot find module 'drizzle-orm/pg-core' or its corresponding type declarations.
+lib/db/src/schema/purchases.ts(2,36): error TS2307: Cannot find module 'drizzle-zod' or its corresponding type declarations.
+lib/db/src/schema/purchases.ts(3,19): error TS2307: Cannot find module 'zod/v4' or its corresponding type declarations.
+lib/db/src/schema/reports.ts(1,66): error TS2307: Cannot find module 'drizzle-orm/pg-core' or its corresponding type declarations.
+lib/db/src/schema/reports.ts(2,36): error TS2307: Cannot find module 'drizzle-zod' or its corresponding type declarations.
+lib/db/src/schema/reports.ts(3,19): error TS2307: Cannot find module 'zod/v4' or its corresponding type declarations.
+lib/db/src/schema/users.ts(1,50): error TS2307: Cannot find module 'drizzle-orm/pg-core' or its corresponding type declarations.
+lib/db/src/schema/users.ts(2,36): error TS2307: Cannot find module 'drizzle-zod' or its corresponding type declarations.
+lib/db/src/schema/users.ts(3,19): error TS2307: Cannot find module 'zod/v4' or its corresponding type declarations.
+ ELIFECYCLE  Command failed with exit code 2.
+ ELIFECYCLE  Command failed with exit code 2.
+ ELIFECYCLE  Command failed with exit code 2.
+==> Build failed 😞
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys

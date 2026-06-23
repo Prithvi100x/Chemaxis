@@ -12,13 +12,14 @@ const purchaseSchema = new mongoose.Schema(
     timestamps: { createdAt: "createdAt", updatedAt: false },
     toJSON: {
       virtuals: true,
-      transform: (_doc, ret) => {
-        ret.id = ret._id.toString();
-        ret.reportId = ret.reportId?.toString();
-        ret.userId = ret.userId?.toString();
-        if (ret.generatedReportId) ret.generatedReportId = ret.generatedReportId.toString();
-        delete ret._id;
-        delete ret.__v;
+      transform: (_doc: unknown, ret: Record<string, any>) => {
+        ret["id"] = ret["_id"]?.toString();
+        ret["reportId"] = ret["reportId"]?.toString();
+        ret["userId"] = ret["userId"]?.toString();
+        if (ret["generatedReportId"]) ret["generatedReportId"] = ret["generatedReportId"].toString();
+        const r = ret as Record<string, unknown>;
+        delete r["_id"];
+        delete r["__v"];
         return ret;
       },
     },

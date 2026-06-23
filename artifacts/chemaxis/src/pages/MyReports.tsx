@@ -24,7 +24,7 @@ export default function MyReports() {
   const { user, logout, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [reports, setReports] = useState<GeneratedReport[]>([]);
-  const [purchases, setPurchases] = useState<Set<number>>(new Set());
+  const [purchases, setPurchases] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
