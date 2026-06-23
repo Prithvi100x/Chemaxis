@@ -128,11 +128,13 @@ router.get("/auth/google/callback", async (req, res) => {
       user = await User.create({ name: gUser.name, email: gUser.email, googleId: gUser.id, avatarUrl: gUser.picture ?? null });
     }
     const token = signToken({ userId: user._id.toString(), name: user.get("name"), email: user.get("email") });
+    const frontendUrl = process.env.FRONTEND_URL ?? "";
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
-    res.redirect("/dashboard");
+    res.redirect(`${frontendUrl}/dashboard`);
   } catch (err) {
     req.log.error({ err }, "Google OAuth callback error");
-    res.redirect("/login?error=google_failed");
+    const frontendUrl = process.env.FRONTEND_URL ?? "";
+    res.redirect(`${frontendUrl}/login?error=google_failed`);
   }
 });
 

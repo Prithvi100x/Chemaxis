@@ -66,7 +66,7 @@ export default function Login() {
 
           {/* Google Sign-In */}
           <a
-            href="/api/auth/google"
+            href={`${import.meta.env.VITE_API_URL ?? ""}/api/auth/google`}
             className="w-full flex items-center justify-center gap-3 py-3 border border-[#E2E8F0] rounded-xl bg-white hover:bg-[#FAFAF8] transition-colors text-sm font-medium text-[#1E293B] mb-4"
           >
             <GoogleIcon />
