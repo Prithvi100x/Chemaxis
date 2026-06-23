@@ -6,7 +6,7 @@ import { requireAuth } from "../middleware/auth.js";
 const router = Router();
 
 async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise<string> {
-  const apiKey = process.env.OPEN_ROUTER;
+  const apiKey = process.env.OPEN_ROUTERR;
   if (!apiKey) throw new Error("OPEN_ROUTER API key is not set");
 
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
