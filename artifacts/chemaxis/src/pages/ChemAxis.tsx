@@ -650,9 +650,7 @@ function NavBar() {
     }`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[var(--ca-primary)] flex items-center justify-center text-white">
-            <Network size={18} />
-          </div>
+          <img src="/logo.png" alt="ChemAxis logo" className="w-8 h-8 rounded-lg object-cover" />
           <span className="font-serif text-xl font-bold tracking-tight text-[var(--ca-fg)]">
             Chem<span className="text-[var(--ca-muted)] font-sans font-medium">Axis</span>
           </span>
@@ -1267,9 +1265,7 @@ function Footer() {
     <footer className="bg-[var(--ca-surface)] border-t border-[var(--ca-border)] py-10 sm:py-12 px-5 sm:px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:justify-between gap-6 text-center md:text-left">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-[var(--ca-primary)] flex items-center justify-center text-white">
-            <Network size={14} />
-          </div>
+          <img src="/logo.png" alt="ChemAxis logo" className="w-6 h-6 rounded object-cover" />
           <span className="font-serif text-lg font-bold tracking-tight text-[var(--ca-fg)]">
             Chem<span className="text-[var(--ca-muted)] font-sans font-medium">Axis</span>
           </span>
