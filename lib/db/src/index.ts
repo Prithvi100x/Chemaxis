@@ -20,11 +20,12 @@ export async function connectDB(): Promise<void> {
     }
   }
 
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
   await mongoose.connect(uri, {
     serverSelectionTimeoutMS: 15000,
     connectTimeoutMS: 15000,
     socketTimeoutMS: 30000,
+    tls: true,
+    tlsAllowInvalidCertificates: true,
+    tlsAllowInvalidHostnames: true,
   });
 }
