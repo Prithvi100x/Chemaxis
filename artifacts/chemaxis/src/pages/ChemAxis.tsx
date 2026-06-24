@@ -1204,56 +1204,85 @@ function DataReportsSection() {
 }
 
 function ContactSection() {
+  const [form, setForm] = React.useState({ name: "", email: "", company: "", industry: "", message: "" });
+  const [sent, setSent] = React.useState(false);
+
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const subject = encodeURIComponent(`ChemAxis Enquiry from ${form.name}${form.company ? ` (${form.company})` : ""}`);
+    const body = encodeURIComponent(
+      `Name: ${form.name}\nEmail: ${form.email}\nCompany: ${form.company || "—"}\nIndustry: ${form.industry || "—"}\n\nMessage:\n${form.message}`
+    );
+    window.open(`mailto:prithvirajb2006@gmail.com?subject=${subject}&body=${body}`, "_blank");
+    setSent(true);
+  };
+
   return (
     <section className="py-16 sm:py-24 px-5 sm:px-6 bg-[var(--ca-bg)] border-t border-[var(--ca-border)]" id="contact">
       <div className="max-w-3xl mx-auto bg-[var(--ca-surface)] rounded-3xl p-6 sm:p-8 md:p-12 border border-[var(--ca-border)] shadow-xl shadow-[rgb(var(--ca-lavender-rgb)/0.05)] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[rgb(var(--ca-sage-rgb)/0.10)] rounded-full blur-[80px]" />
-        
+
         <div className="relative z-10">
           <div className="text-center mb-8 sm:mb-10">
             <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[var(--ca-fg)] mb-2 sm:mb-3">Contact Us</h2>
             <p className="text-[var(--ca-muted)] text-sm sm:text-base">Have a question or need help? Fill in your details and we will get back to you as soon as possible.</p>
           </div>
 
-          <form className="space-y-5 sm:space-y-6" onSubmit={(e) => e.preventDefault()}>
-            <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--ca-fg)]">Full Name</label>
-                <input type="text" className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all" placeholder="Jane Doe" />
+          {sent ? (
+            <div className="text-center py-10">
+              <div className="w-16 h-16 rounded-full bg-[rgb(var(--ca-sage-rgb)/0.15)] flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-[var(--ca-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--ca-fg)]">Work Email</label>
-                <input type="email" className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all" placeholder="jane@company.com" />
-              </div>
+              <h3 className="font-serif text-xl font-medium text-[var(--ca-fg)] mb-2">Your email app is opening!</h3>
+              <p className="text-[var(--ca-muted)] text-sm mb-6">Your message is ready to send — just hit Send in your email app.</p>
+              <button onClick={() => setSent(false)} className="text-sm text-[var(--ca-primary)] underline hover:no-underline">Send another message</button>
             </div>
-            
-            <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--ca-fg)]">Company</label>
-                <input type="text" className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all" placeholder="Organization Name" />
+          ) : (
+            <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
+              <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--ca-fg)]">Full Name</label>
+                  <input required value={form.name} onChange={set("name")} type="text" className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all" placeholder="Jane Doe" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--ca-fg)]">Your Email</label>
+                  <input required value={form.email} onChange={set("email")} type="email" className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all" placeholder="jane@company.com" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--ca-fg)]">Primary Industry</label>
-                <select className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all appearance-none text-[var(--ca-muted)]">
-                  <option value="">Select Industry...</option>
-                  <option value="petrochemicals">Petrochemicals</option>
-                  <option value="agrochemicals">Agrochemicals</option>
-                  <option value="specialty">Specialty Chemicals</option>
-                  <option value="fmcg">FMCG / Consumer</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[var(--ca-fg)]">How can we help?</label>
-              <textarea className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all min-h-[120px] resize-y" placeholder="Tell us what you need help with..." />
-            </div>
+              <div className="grid sm:grid-cols-2 gap-5 sm:gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--ca-fg)]">Company</label>
+                  <input value={form.company} onChange={set("company")} type="text" className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all" placeholder="Organization Name" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--ca-fg)]">Primary Industry</label>
+                  <select value={form.industry} onChange={set("industry")} className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all appearance-none text-[var(--ca-muted)]">
+                    <option value="">Select Industry...</option>
+                    <option value="Petrochemicals">Petrochemicals</option>
+                    <option value="Agrochemicals">Agrochemicals</option>
+                    <option value="Specialty Chemicals">Specialty Chemicals</option>
+                    <option value="FMCG / Consumer">FMCG / Consumer</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
 
-            <button className="w-full py-4 rounded-xl bg-[var(--ca-primary)] text-white font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-lg shadow-[rgb(var(--ca-primary-rgb)/0.20)]">
-              Send Message
-            </button>
-          </form>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[var(--ca-fg)]">How can we help?</label>
+                <textarea required value={form.message} onChange={set("message")} className="w-full px-4 py-3 rounded-xl bg-[var(--ca-bg)] border border-[var(--ca-border)] focus:border-[var(--ca-primary)] focus:ring-1 focus:ring-[var(--ca-primary)] outline-none transition-all min-h-[120px] resize-y" placeholder="Tell us what you need help with..." />
+              </div>
+
+              <button type="submit" className="w-full py-4 rounded-xl bg-[var(--ca-primary)] text-white font-medium hover:bg-[var(--ca-primary-hover)] transition-colors shadow-lg shadow-[rgb(var(--ca-primary-rgb)/0.20)]">
+                Send Message
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </section>
