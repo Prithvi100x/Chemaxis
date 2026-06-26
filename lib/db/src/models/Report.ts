@@ -4,7 +4,7 @@ const reportSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
-    category: { type: String, required: true },
+    category: { type: String, required: true, index: true },
     sourceLanguage: { type: String, default: "zh" },
     priceCents: { type: Number, required: true },
     tags: [String],
@@ -26,5 +26,9 @@ const reportSchema = new mongoose.Schema(
     },
   }
 );
+
+reportSchema.index({ category: 1, priceCents: 1 });
+reportSchema.index({ tags: 1 });
+reportSchema.index({ title: "text", description: "text", tags: "text" });
 
 export const Report = mongoose.model("Report", reportSchema);

@@ -38,10 +38,19 @@ export type Report = {
   pageCount: number; sampleContent: Record<string, unknown> | null;
   createdAt: string; purchased?: boolean;
 };
+export type ReportMetrics = {
+  generationMs?: number | null;
+  promptTokens?: number | null;
+  completionTokens?: number | null;
+  totalTokens?: number | null;
+  retryCount?: number;
+  modelUsed?: string | null;
+};
 export type GeneratedReport = {
   id: string; reportId: string; targetLanguage: string; status: string;
   customNotes?: string; content?: { raw: string; sections: Record<string, string>; reportTitle: string; targetLanguage: string; generatedAt: string } | null;
   createdAt: string; reportTitle?: string; reportCategory?: string;
+  metrics?: ReportMetrics | null;
 };
 export type Purchase = { id: string; reportId: string; amountCents: number; status: string; createdAt: string; reportTitle?: string };
 

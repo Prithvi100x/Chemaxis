@@ -5,12 +5,29 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
-async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise<string> {
+const PRIMARY_MODEL = "meta-llama/llama-4-maverick";
+const FALLBACK_MODEL = "google/gemma-3-27b-it";
+const MAX_RETRIES = 2;
+const MIN_VALID_SECTIONS = 3;
+
+interface OpenRouterResponse {
+  choices: { message: { content: string } }[];
+  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+  model?: string;
+}
+
+async function callOpenRouter(
+  systemPrompt: string,
+  userPrompt: string,
+  model: string,
+  signal?: AbortSignal,
+): Promise<{ content: string; usage: OpenRouterResponse["usage"]; model: string }> {
   const apiKey = process.env.OPEN_ROUTERR;
-  if (!apiKey) throw new Error("OPEN_ROUTER API key is not set");
+  if (!apiKey) throw new Error("OPEN_ROUTERR API key is not set");
 
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
+    signal,
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json",
@@ -18,8 +35,9 @@ async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise
       "X-Title": "ChemAxis",
     },
     body: JSON.stringify({
-      model: "meta-llama/llama-4-maverick",
+      model,
       max_tokens: 8192,
+      temperature: 0.3,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -29,11 +47,63 @@ async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`OpenRouter error ${res.status}: ${err}`);
+    throw new Error(`OpenRouter ${res.status}: ${err}`);
   }
 
-  const data = await res.json() as { choices: { message: { content: string } }[] };
-  return data.choices[0]?.message?.content ?? "";
+  const data = await res.json() as OpenRouterResponse;
+  const content = data.choices[0]?.message?.content ?? "";
+  return { content, usage: data.usage, model: data.model ?? model };
+}
+
+function validateOutput(content: string): boolean {
+  const sections = parseReportSections(content);
+  const sectionCount = Object.keys(sections).length;
+  const wordCount = content.split(/\s+/).length;
+  return sectionCount >= MIN_VALID_SECTIONS && wordCount >= 400;
+}
+
+async function generateWithRetry(
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<{ content: string; usage: OpenRouterResponse["usage"]; model: string; retryCount: number }> {
+  let lastError: Error | null = null;
+  let retryCount = 0;
+
+  const attempts = [
+    { model: PRIMARY_MODEL, delayMs: 0 },
+    { model: PRIMARY_MODEL, delayMs: 1500 },
+    { model: FALLBACK_MODEL, delayMs: 0 },
+  ];
+
+  for (let i = 0; i <= MAX_RETRIES; i++) {
+    const attempt = attempts[i];
+    if (!attempt) break;
+
+    if (attempt.delayMs > 0) {
+      await new Promise(r => setTimeout(r, attempt.delayMs));
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90_000);
+
+      const result = await callOpenRouter(systemPrompt, userPrompt, attempt.model, controller.signal);
+      clearTimeout(timeout);
+
+      if (!validateOutput(result.content)) {
+        retryCount++;
+        lastError = new Error(`Output validation failed: only ${Object.keys(parseReportSections(result.content)).length} sections, ${result.content.split(/\s+/).length} words`);
+        continue;
+      }
+
+      return { ...result, retryCount };
+    } catch (err) {
+      retryCount++;
+      lastError = err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  throw lastError ?? new Error("All generation attempts failed");
 }
 
 router.post("/reports/:id/generate", requireAuth, async (req, res) => {
@@ -58,45 +128,62 @@ router.post("/reports/:id/generate", requireAuth, async (req, res) => {
 
   res.json({ id: gen._id.toString(), status: "processing" });
 
+  const startMs = Date.now();
+
   try {
     const langLabel: Record<string, string> = { en: "English", zh: "Chinese", ar: "Arabic", de: "German", fr: "French" };
     const targetLangName = langLabel[targetLanguage] ?? targetLanguage;
 
-    const systemPrompt = `You are a professional chemical industry analyst who creates detailed market intelligence reports.
-Your reports are clear, structured, and actionable. Use plain business language — avoid overly technical jargon.
-Always respond in ${targetLangName}.`;
+    const systemPrompt = `You are a senior chemical industry analyst with 15+ years of experience producing market intelligence reports for Fortune 500 companies.
+
+Your reports are authoritative, data-driven, and actionable. You cite realistic market figures, price ranges, and growth rates grounded in industry knowledge up to your training cutoff.
+
+STRICT FORMATTING RULES:
+- Use exactly these section headers (with the number prefix): "1. Executive Summary", "2. Market Overview", "3. Supply & Demand Analysis", "4. Price Trends", "5. Key Players & Market Share", "6. Regional Breakdown", "7. Risks & Opportunities", "8. Outlook & Recommendations"
+- Each section must have at least 3 substantive paragraphs or bullet points
+- Include specific numbers, percentages, and USD price figures wherever possible
+- Do NOT use placeholder text like "X%" or "[data unavailable]"
+- Always respond entirely in ${targetLangName}`;
 
     const sampleData = report.get("sampleContent") ?? {};
-    const userPrompt = `Generate a complete market intelligence report for: "${report.get("title")}"
+    const userPrompt = `Generate a complete professional market intelligence report for: "${report.get("title")}"
 
 Category: ${report.get("category")}
 Description: ${report.get("description")}
-${customNotes ? `Client's specific focus areas: ${customNotes}` : ""}
+${customNotes ? `Client focus areas: ${customNotes}` : ""}
+Source context data: ${JSON.stringify(sampleData)}
 
-Create a well-structured report with these sections:
-1. Executive Summary (3-4 sentences, key takeaways)
-2. Market Overview (current market size, growth trends, key drivers)
-3. Supply & Demand Analysis (production volumes, demand drivers, imbalances)
-4. Price Trends (recent pricing, forecast range, factors affecting price)
-5. Key Players & Market Share (top 5 companies, their roles)
-6. Regional Breakdown (Asia-Pacific, Europe, North America, Middle East)
-7. Risks & Opportunities (3 risks, 3 opportunities)
-8. Outlook & Recommendations (12-month forecast, actionable advice)
+Deliver all 8 sections in full. Be specific with numbers — include market size in USD billions, price ranges per tonne or kg, year-over-year growth rates, and top company market share percentages. Write in ${targetLangName}.`;
 
-Context data: ${JSON.stringify(sampleData)}
-
-Write the full report in ${targetLangName}. Be specific with numbers and percentages where possible.`;
-
-    const content = await callOpenRouter(systemPrompt, userPrompt);
+    const { content, usage, model: modelUsed, retryCount } = await generateWithRetry(systemPrompt, userPrompt);
+    const generationMs = Date.now() - startMs;
     const sections = parseReportSections(content);
 
     await GeneratedReport.findByIdAndUpdate(gen._id, {
       status: "done",
-      content: { raw: content, sections, generatedAt: new Date().toISOString(), targetLanguage, reportTitle: report.get("title") },
+      content: {
+        raw: content,
+        sections,
+        generatedAt: new Date().toISOString(),
+        targetLanguage,
+        reportTitle: report.get("title"),
+      },
+      metrics: {
+        generationMs,
+        promptTokens: usage?.prompt_tokens ?? null,
+        completionTokens: usage?.completion_tokens ?? null,
+        totalTokens: usage?.total_tokens ?? null,
+        retryCount,
+        modelUsed,
+      },
     });
   } catch (err) {
-    req.log.error({ err }, "Generate report error");
-    await GeneratedReport.findByIdAndUpdate(gen._id, { status: "error" });
+    const generationMs = Date.now() - startMs;
+    req.log.error({ err, generationMs }, "Generate report error");
+    await GeneratedReport.findByIdAndUpdate(gen._id, {
+      status: "error",
+      metrics: { generationMs },
+    });
   }
 });
 
@@ -124,7 +211,7 @@ router.get("/my-reports", requireAuth, async (req, res) => {
   try {
     const gens = await GeneratedReport.find({ userId })
       .populate("reportId", "title category")
-      .sort({ createdAt: 1 });
+      .sort({ createdAt: -1 });
 
     res.json(gens.map(g => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -140,6 +227,7 @@ router.get("/my-reports", requireAuth, async (req, res) => {
         reportTitle: isPopulated ? (reportDoc.title ?? null) : null,
         reportCategory: isPopulated ? (reportDoc.category ?? null) : null,
         content: g.get("content"),
+        metrics: g.get("metrics"),
       };
     }));
   } catch (err) {

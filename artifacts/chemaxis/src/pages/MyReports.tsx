@@ -1,8 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
-import { api, type GeneratedReport } from "@/lib/api";
-import { FlaskConical, Download, FileText, Clock, CheckCircle2, AlertCircle, ArrowRight, LogOut } from "lucide-react";
+import { api, type GeneratedReport, type ReportMetrics } from "@/lib/api";
+import { FlaskConical, Download, FileText, Clock, CheckCircle2, AlertCircle, ArrowRight, LogOut, Zap, Cpu } from "lucide-react";
+
+function MetricsPill({ metrics }: { metrics: ReportMetrics }) {
+  const secs = metrics.generationMs != null ? (metrics.generationMs / 1000).toFixed(1) : null;
+  const tokens = metrics.totalTokens ?? null;
+  const model = metrics.modelUsed?.split("/").pop() ?? null;
+  const retried = (metrics.retryCount ?? 0) > 0;
+  if (!secs && !tokens) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2 mt-3">
+      {secs && (
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#64748B] bg-[#F1F5F9] border border-[#E2E8F0] px-2 py-0.5 rounded-full">
+          <Zap className="w-3 h-3 text-amber-500" /> {secs}s generation
+        </span>
+      )}
+      {tokens && (
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#64748B] bg-[#F1F5F9] border border-[#E2E8F0] px-2 py-0.5 rounded-full">
+          <Cpu className="w-3 h-3 text-purple-400" /> {tokens.toLocaleString()} tokens
+        </span>
+      )}
+      {model && (
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#64748B] bg-[#F1F5F9] border border-[#E2E8F0] px-2 py-0.5 rounded-full">
+          {model}
+        </span>
+      )}
+      {retried && (
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+          retried ×{metrics.retryCount}
+        </span>
+      )}
+    </div>
+  );
+}
 
 function StatusBadge({ status }: { status: string }) {
   const cfg: Record<string, { color: string; label: string; Icon: typeof Clock }> = {
@@ -35,7 +67,7 @@ export default function MyReports() {
     if (!user) return;
     Promise.all([api.generate.myReports(), api.purchase.list()])
       .then(([gens, purch]) => {
-        setReports([...gens].reverse());
+        setReports(gens);
         setPurchases(new Set(purch.map(p => p.reportId)));
       })
       .catch(() => {})
@@ -116,6 +148,8 @@ export default function MyReports() {
                       ) : null}
                     </div>
                   </div>
+
+                  {r.metrics && <MetricsPill metrics={r.metrics} />}
 
                   {r.status === "done" && r.content?.sections && (
                     <div className="mt-4 p-4 bg-[#FAFAF8] rounded-xl border border-[#E2E8F0]">

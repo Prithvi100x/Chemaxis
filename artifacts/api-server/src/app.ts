@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
+import rateLimit from "express-rate-limit";
 import { logger } from "./lib/logger.js";
 import { jwtMiddleware } from "./middleware/auth.js";
 import router from "./routes/index.js";
@@ -45,10 +46,41 @@ app.use(
   }),
 );
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests, please try again later." },
+  skip: () => process.env.NODE_ENV !== "production",
+});
+
+const generateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Report generation limit reached. Please try again in an hour." },
+  skip: () => process.env.NODE_ENV !== "production",
+});
+
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests." },
+  skip: () => process.env.NODE_ENV !== "production",
+});
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(jwtMiddleware);
+
+app.use("/api", globalLimiter);
+app.use("/api/auth", authLimiter);
+app.use("/api/reports/:id/generate", generateLimiter);
 
 app.use("/api", router);
 
