@@ -23,6 +23,7 @@ export default function ReportDetail() {
   const [generating, setGenerating] = useState(false);
   const [genReport, setGenReport] = useState<GeneratedReport | null>(null);
   const [purchasing, setPurchasing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [purchased, setPurchased] = useState(false);
   const [error, setError] = useState("");
   const [genFailed, setGenFailed] = useState(false);
@@ -76,6 +77,19 @@ export default function ReportDetail() {
       setError(err instanceof Error ? err.message : "Purchase failed");
     } finally {
       setPurchasing(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!genReport) return;
+    setDownloading(true);
+    setError("");
+    try {
+      await api.generate.download(genReport.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to download the report");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -223,10 +237,10 @@ export default function ReportDetail() {
                       {purchasing ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing…</> : <><ShoppingCart className="w-4 h-4" /> Buy & Download PDF — ${(report.priceCents / 100).toFixed(2)}</>}
                     </button>
                   ) : (
-                    <a href={api.generate.download(genReport.id)}
-                      className="w-full py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
-                      <Download className="w-4 h-4" /> Download PDF
-                    </a>
+                    <button onClick={handleDownload} disabled={downloading}
+                      className="w-full py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                      {downloading ? <><Loader2 className="w-4 h-4 animate-spin" /> Downloading…</> : <><Download className="w-4 h-4" /> Download PDF</>}
+                    </button>
                   )}
                   <button onClick={() => setGenReport(null)} className="w-full py-2 text-sm text-[#64748B] hover:text-[#2D4A46] border border-[#E2E8F0] rounded-xl">
                     Start over with different options
