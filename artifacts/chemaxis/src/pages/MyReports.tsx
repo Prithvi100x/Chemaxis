@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import { api, type GeneratedReport, type ReportMetrics } from "@/lib/api";
-import { FlaskConical, Download, FileText, Clock, CheckCircle2, AlertCircle, ArrowRight, LogOut, Zap, Cpu } from "lucide-react";
+import { FlaskConical, Download, FileText, Clock, CheckCircle2, AlertCircle, ArrowRight, LogOut, Zap, Cpu, Loader2 } from "lucide-react";
 
 function MetricsPill({ metrics }: { metrics: ReportMetrics }) {
   const secs = metrics.generationMs != null ? (metrics.generationMs / 1000).toFixed(1) : null;
@@ -58,6 +58,8 @@ export default function MyReports() {
   const [reports, setReports] = useState<GeneratedReport[]>([]);
   const [purchases, setPurchases] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) setLocation("/login");
@@ -75,6 +77,18 @@ export default function MyReports() {
   }, [user]);
 
   const handleLogout = async () => { await logout(); setLocation("/"); };
+
+  const handleDownload = async (id: string) => {
+    setDownloadingId(id);
+    setDownloadError("");
+    try {
+      await api.generate.download(id);
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : "Failed to download the report");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   if (authLoading || !user) return <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center"><div className="w-8 h-8 border-4 border-[#2D4A46] border-t-transparent rounded-full animate-spin" /></div>;
 
@@ -98,6 +112,12 @@ export default function MyReports() {
           <h1 className="text-2xl font-bold text-[#1E293B] mb-1">My Reports</h1>
           <p className="text-[#64748B] text-sm">All your reports are listed here. Click "Download PDF" to save a report to your device.</p>
         </div>
+
+        {downloadError && (
+          <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <AlertCircle className="h-4 w-4 shrink-0" /> {downloadError}
+          </div>
+        )}
 
         {loading ? (
           <div className="py-20 flex justify-center"><div className="w-8 h-8 border-4 border-[#2D4A46] border-t-transparent rounded-full animate-spin" /></div>
@@ -132,12 +152,13 @@ export default function MyReports() {
                     <div className="flex items-center gap-3 shrink-0">
                       <StatusBadge status={r.status} />
                       {canDownload ? (
-                        <a
-                          href={api.generate.download(r.id)}
-                          className="flex items-center gap-1.5 bg-[#2D4A46] text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[#1E3330] transition-colors"
+                        <button
+                          onClick={() => handleDownload(r.id)}
+                          disabled={downloadingId === r.id}
+                          className="flex items-center gap-1.5 bg-[#2D4A46] text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[#1E3330] transition-colors disabled:opacity-60"
                         >
-                          <Download className="w-4 h-4" /> Download PDF
-                        </a>
+                          {downloadingId === r.id ? <><Loader2 className="w-4 h-4 animate-spin" /> Downloading…</> : <><Download className="w-4 h-4" /> Download PDF</>}
+                        </button>
                       ) : r.status === "done" && !isPurchased ? (
                         <a
                           href={`/reports/${r.reportId}`}
