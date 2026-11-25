@@ -31,6 +31,25 @@ async function requestMaybeNull<T>(path: string, opts: RequestInit = {}): Promis
   }
 }
 
+async function downloadFile(path: string): Promise<void> {
+  const res = await fetch(`${BASE}${path}`, { credentials: "include" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`);
+  }
+
+  const disposition = res.headers.get("Content-Disposition");
+  const filename = disposition?.match(/filename="?([^";]+)"?/)?.[1] ?? "chemaxis-report.pdf";
+  const url = URL.createObjectURL(await res.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
 export type User = { id: string; name: string; email: string; company?: string };
 export type Report = {
   id: string; title: string; description: string; category: string;
@@ -73,7 +92,7 @@ export const api = {
       }),
     get: (id: string) => request<GeneratedReport>(`/generated/${id}`),
     myReports: () => request<GeneratedReport[]>("/my-reports"),
-    download: (id: string) => `${BASE}/generated/${id}/download`,
+    download: (id: string) => downloadFile(`/generated/${id}/download`),
   },
   purchase: {
     buy: (reportId: string, generatedReportId?: string) =>
