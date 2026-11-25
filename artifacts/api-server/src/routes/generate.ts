@@ -77,7 +77,10 @@ async function callGemini(
   model: string,
   signal?: AbortSignal,
 ): Promise<{ content: string; usage: GenerationUsage; model: string }> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  // GEMINI_API_KEY is the canonical setting. Keep the prior service setting as
+  // a migration fallback so existing Render deployments do not fail while the
+  // secret is renamed in the dashboard.
+  const apiKey = process.env.GEMINI_API_KEY?.trim() || process.env.OPEN_ROUTERR?.trim();
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
 
   const res = await fetch(
