@@ -13,7 +13,7 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
-      - key: OPEN_ROUTER
+      - key: GEMINI_API_KEY
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false
