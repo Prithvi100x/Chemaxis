@@ -65,9 +65,22 @@ export type ReportMetrics = {
   retryCount?: number;
   modelUsed?: string | null;
 };
+export type VisualDatum = { label: string; value: number; secondaryValue?: number; size?: number };
+export type VisualChart = {
+  type: "bar" | "line" | "area" | "donut" | "waterfall" | "heatmap" | "radar" | "scatter" | "bubble" | "funnel" | "timeline" | "flow";
+  title: string;
+  unit?: string;
+  annotation?: string;
+  data: VisualDatum[];
+};
+export type VisualReport = {
+  executiveSummary: string;
+  kpis: Array<{ label: string; value: string; context?: string; trend?: "up" | "down" | "flat" }>;
+  sections: Array<{ title: string; summary?: string; keyInsight?: string; chart: VisualChart }>;
+};
 export type GeneratedReport = {
   id: string; reportId: string; targetLanguage: string; status: string;
-  customNotes?: string; content?: { raw: string; sections: Record<string, string>; reportTitle: string; targetLanguage: string; generatedAt: string } | null;
+  customNotes?: string; content?: { raw: string; sections: Record<string, string>; visualReport?: VisualReport | null; reportTitle: string; targetLanguage: string; generatedAt: string } | null;
   createdAt: string; reportTitle?: string; reportCategory?: string;
   metrics?: ReportMetrics | null;
 };

@@ -3,6 +3,7 @@ import { useRoute, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import { api, type Report, type GeneratedReport } from "@/lib/api";
 import { FlaskConical, FileText, Download, ShoppingCart, Loader2, CheckCircle2, Globe, ArrowLeft, ChevronDown, ChevronUp, AlertCircle, RefreshCw } from "lucide-react";
+import { VisualReportPreview } from "@/components/VisualReportPreview";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -156,7 +157,9 @@ export default function ReportDetail() {
               </div>
             )}
 
-            {genReport?.status === "done" && genReport.content?.sections && (
+            {genReport?.status === "done" && genReport.content?.visualReport ? (
+              <VisualReportPreview report={genReport.content.visualReport} />
+            ) : genReport?.status === "done" && genReport.content?.sections ? (
               <div className="border border-[#E2E8F0] rounded-2xl overflow-hidden">
                 <div className="bg-[#2D4A46] px-6 py-4">
                   <h2 className="text-white font-bold">Your Report Preview</h2>
@@ -174,7 +177,7 @@ export default function ReportDetail() {
                   )}
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="lg:col-span-1">
