@@ -8,7 +8,49 @@ const router = Router();
 const PRIMARY_MODEL = "gemini-3.8-flash";
 const FALLBACK_MODEL = "gemini-3.5-flash-lite";
 const MAX_RETRIES = 2;
-const MIN_VALID_SECTIONS = 3;
+const MIN_VISUAL_SECTIONS = 5;
+
+const VISUALIZATION_TYPES = [
+  "bar", "line", "area", "donut", "waterfall", "heatmap", "radar",
+  "scatter", "bubble", "funnel", "timeline", "flow",
+] as const;
+
+type VisualizationType = (typeof VISUALIZATION_TYPES)[number];
+
+interface VisualDatum {
+  label: string;
+  value: number;
+  secondaryValue?: number;
+  size?: number;
+}
+
+interface VisualChart {
+  type: VisualizationType;
+  title: string;
+  unit: string;
+  annotation: string;
+  data: VisualDatum[];
+}
+
+interface VisualSection {
+  title: string;
+  summary: string;
+  keyInsight: string;
+  chart: VisualChart;
+}
+
+interface VisualKpi {
+  label: string;
+  value: string;
+  context: string;
+  trend: "up" | "down" | "flat";
+}
+
+interface VisualReport {
+  executiveSummary: string;
+  kpis: VisualKpi[];
+  sections: VisualSection[];
+}
 
 interface GenerationUsage {
   prompt_tokens?: number;
@@ -55,6 +97,7 @@ async function callGemini(
         generationConfig: {
           maxOutputTokens: 8192,
           temperature: 0.3,
+          responseMimeType: "application/json",
         },
       }),
     },
@@ -89,17 +132,87 @@ async function callGemini(
   };
 }
 
-function validateOutput(content: string): boolean {
-  const sections = parseReportSections(content);
-  const sectionCount = Object.keys(sections).length;
-  const wordCount = content.split(/\s+/).length;
-  return sectionCount >= MIN_VALID_SECTIONS && wordCount >= 400;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readText(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value.trim() : fallback;
+}
+
+function readNumber(value: unknown): number | null {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function parseVisualReport(raw: string): VisualReport {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("The model did not return valid report JSON");
+  }
+
+  if (!isRecord(parsed)) throw new Error("The model returned an invalid report structure");
+
+  const kpis = Array.isArray(parsed.kpis)
+    ? parsed.kpis.flatMap((item): VisualKpi[] => {
+      if (!isRecord(item)) return [];
+      const trend = item.trend === "up" || item.trend === "down" || item.trend === "flat" ? item.trend : "flat";
+      const label = readText(item.label);
+      const value = readText(item.value);
+      if (!label || !value) return [];
+      return [{ label, value, context: readText(item.context), trend }];
+    })
+    : [];
+
+  const sections = Array.isArray(parsed.sections)
+    ? parsed.sections.flatMap((item): VisualSection[] => {
+      if (!isRecord(item) || !isRecord(item.chart)) return [];
+      const chartData = Array.isArray(item.chart.data)
+        ? item.chart.data.flatMap((point): VisualDatum[] => {
+          if (!isRecord(point)) return [];
+          const label = readText(point.label);
+          const value = readNumber(point.value);
+          if (!label || value === null) return [];
+          const secondaryValue = readNumber(point.secondaryValue);
+          const size = readNumber(point.size);
+          return [{ label, value, ...(secondaryValue === null ? {} : { secondaryValue }), ...(size === null ? {} : { size }) }];
+        })
+        : [];
+      const chartType = VISUALIZATION_TYPES.includes(item.chart.type as VisualizationType)
+        ? item.chart.type as VisualizationType
+        : "bar";
+      const title = readText(item.title);
+      const chartTitle = readText(item.chart.title);
+      if (!title || !chartTitle || chartData.length < 2) return [];
+      return [{
+        title,
+        summary: readText(item.summary),
+        keyInsight: readText(item.keyInsight),
+        chart: {
+          type: chartType,
+          title: chartTitle,
+          unit: readText(item.chart.unit),
+          annotation: readText(item.chart.annotation),
+          data: chartData,
+        },
+      }];
+    })
+    : [];
+
+  const executiveSummary = readText(parsed.executiveSummary);
+  if (!executiveSummary || kpis.length < 3 || sections.length < MIN_VISUAL_SECTIONS) {
+    throw new Error("The visual report is incomplete");
+  }
+
+  return { executiveSummary, kpis, sections };
 }
 
 async function generateWithRetry(
   systemPrompt: string,
   userPrompt: string,
-): Promise<{ content: string; usage: GenerationUsage; model: string; retryCount: number }> {
+): Promise<{ content: string; usage: GenerationUsage; model: string; retryCount: number; visualReport: VisualReport }> {
   let lastError: Error | null = null;
   let retryCount = 0;
 
@@ -124,13 +237,7 @@ async function generateWithRetry(
       const result = await callGemini(systemPrompt, userPrompt, attempt.model, controller.signal);
       clearTimeout(timeout);
 
-      if (!validateOutput(result.content)) {
-        retryCount++;
-        lastError = new Error(`Output validation failed: only ${Object.keys(parseReportSections(result.content)).length} sections, ${result.content.split(/\s+/).length} words`);
-        continue;
-      }
-
-      return { ...result, retryCount };
+      return { ...result, visualReport: parseVisualReport(result.content), retryCount };
     } catch (err) {
       retryCount++;
       lastError = err instanceof Error ? err : new Error(String(err));
@@ -168,36 +275,52 @@ router.post("/reports/:id/generate", requireAuth, async (req, res) => {
     const langLabel: Record<string, string> = { en: "English", zh: "Chinese", ar: "Arabic", de: "German", fr: "French" };
     const targetLangName = langLabel[targetLanguage] ?? targetLanguage;
 
-    const systemPrompt = `You are a senior chemical industry analyst with 15+ years of experience producing market intelligence reports for Fortune 500 companies.
+    const systemPrompt = `You are a senior chemical-industry analyst and information-design director. Create a comprehensive visual-intelligence report in ${targetLangName}.
 
-Your reports are authoritative, data-driven, and actionable. You cite realistic market figures, price ranges, and growth rates grounded in industry knowledge up to your training cutoff.
+The report must communicate primarily through accurate charts, diagrams, KPI cards, and concise visual explanations rather than long paragraphs. Select chart types that fit the supplied data—do not force a chart merely to appear diverse. Use at least five distinct visualization types across the report, selected from: bar, line, area, donut, waterfall, heatmap, radar, scatter, bubble, funnel, timeline, and flow. A flow chart can represent a process flow, Sankey-style relationship, or hierarchy when the data supports it.
 
-STRICT FORMATTING RULES:
-- Use exactly these section headers (with the number prefix): "1. Executive Summary", "2. Market Overview", "3. Supply & Demand Analysis", "4. Price Trends", "5. Key Players & Market Share", "6. Regional Breakdown", "7. Risks & Opportunities", "8. Outlook & Recommendations"
-- Each section must have at least 3 substantive paragraphs or bullet points
-- Include specific numbers, percentages, and USD price figures wherever possible
-- Do NOT use placeholder text like "X%" or "[data unavailable]"
-- Always respond entirely in ${targetLangName}`;
+Only use figures supported by the supplied source context or clearly label them as estimates, scenarios, or forecasts. Never invent a citation or present an estimate as observed fact.
+
+Return valid JSON only, with no Markdown fences or commentary, matching this exact shape:
+{
+  "executiveSummary": "Concise 60–100 word overview",
+  "kpis": [{ "label": "Metric", "value": "Formatted value", "context": "What it means", "trend": "up|down|flat" }],
+  "sections": [{
+    "title": "Section title",
+    "summary": "Concise 50–90 word explanation of the visual",
+    "keyInsight": "One decision-ready conclusion",
+    "chart": {
+      "type": "bar|line|area|donut|waterfall|heatmap|radar|scatter|bubble|funnel|timeline|flow",
+      "title": "Chart title",
+      "unit": "USD/MT, %, index, or another clear unit",
+      "annotation": "A precise observation about the chart",
+      "data": [{ "label": "Category or period", "value": 123, "secondaryValue": 45, "size": 20 }]
+    }
+  }]
+}
+
+Provide 4–6 KPI cards and exactly 6 sections. Every chart needs 3–8 numerical data points except timeline and flow charts, which may have 2–6 ordered stages. Use secondaryValue only for scatter, bubble, or comparison visuals, and size only for bubble visuals.`;
 
     const sampleData = report.get("sampleContent") ?? {};
-    const userPrompt = `Generate a complete professional market intelligence report for: "${report.get("title")}"
+    const userPrompt = `Create the visual intelligence report for: "${report.get("title")}"
 
 Category: ${report.get("category")}
 Description: ${report.get("description")}
 ${customNotes ? `Client focus areas: ${customNotes}` : ""}
 Source context data: ${JSON.stringify(sampleData)}
 
-Deliver all 8 sections in full. Be specific with numbers — include market size in USD billions, price ranges per tonne or kg, year-over-year growth rates, and top company market share percentages. Write in ${targetLangName}.`;
+Use a modern executive-dashboard style. Include meaningful labels, units, annotations, exact supplied values, percentages where valid, key trends, anomalies, relationships, and decision-ready takeaways. Keep the language ${targetLangName}.`;
 
-    const { content, usage, model: modelUsed, retryCount } = await generateWithRetry(systemPrompt, userPrompt);
+    const { content, usage, model: modelUsed, retryCount, visualReport } = await generateWithRetry(systemPrompt, userPrompt);
     const generationMs = Date.now() - startMs;
-    const sections = parseReportSections(content);
+    const sections = Object.fromEntries(visualReport.sections.map((section) => [section.title, section.summary]));
 
     await GeneratedReport.findByIdAndUpdate(gen._id, {
       status: "done",
       content: {
         raw: content,
         sections,
+        visualReport,
         generatedAt: new Date().toISOString(),
         targetLanguage,
         reportTitle: report.get("title"),
@@ -269,28 +392,5 @@ router.get("/my-reports", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch your reports" });
   }
 });
-
-function parseReportSections(raw: string): Record<string, string> {
-  const sections: Record<string, string> = {};
-  const sectionNames = [
-    "Executive Summary", "Market Overview", "Supply & Demand", "Price Trends",
-    "Key Players", "Regional Breakdown", "Risks & Opportunities", "Outlook",
-  ];
-  for (let i = 0; i < sectionNames.length; i++) {
-    const name = sectionNames[i];
-    const next = sectionNames[i + 1];
-    const startMatch = raw.match(new RegExp(`(?:^|\\n).*${name.replace("&", "[&＆]")}[:\\s]*\\n`, "i"));
-    if (!startMatch) continue;
-    const start = (startMatch.index ?? 0) + startMatch[0].length;
-    let end = raw.length;
-    if (next) {
-      const endMatch = raw.substring(start).match(new RegExp(`(?:^|\\n).*${next.replace("&", "[&＆]")}[:\\s]*\\n`, "i"));
-      if (endMatch) end = start + (endMatch.index ?? raw.length - start);
-    }
-    sections[name] = raw.substring(start, end).trim();
-  }
-  if (Object.keys(sections).length === 0) sections["Full Report"] = raw;
-  return sections;
-}
 
 export default router;
