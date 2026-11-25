@@ -5,54 +5,88 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
-const PRIMARY_MODEL = "meta-llama/llama-4-maverick";
-const FALLBACK_MODEL = "google/gemma-3-27b-it";
+const PRIMARY_MODEL = "gemini-3.8-flash";
+const FALLBACK_MODEL = "gemini-3.5-flash-lite";
 const MAX_RETRIES = 2;
 const MIN_VALID_SECTIONS = 3;
 
-interface OpenRouterResponse {
-  choices: { message: { content: string } }[];
-  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
-  model?: string;
+interface GenerationUsage {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
 }
 
-async function callOpenRouter(
+interface GeminiResponse {
+  candidates?: Array<{
+    content?: { parts?: Array<{ text?: string }> };
+  }>;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  };
+  modelVersion?: string;
+  promptFeedback?: { blockReason?: string };
+}
+
+async function callGemini(
   systemPrompt: string,
   userPrompt: string,
   model: string,
   signal?: AbortSignal,
-): Promise<{ content: string; usage: OpenRouterResponse["usage"]; model: string }> {
-  const apiKey = process.env.OPEN_ROUTERR;
-  if (!apiKey) throw new Error("OPEN_ROUTERR API key is not set");
+): Promise<{ content: string; usage: GenerationUsage; model: string }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
 
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    signal,
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://chemaxis.app",
-      "X-Title": "ChemAxis",
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      signal,
+      headers: {
+        "x-goog-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [
+          { role: "user", parts: [{ text: userPrompt }] },
+        ],
+        generationConfig: {
+          maxOutputTokens: 8192,
+          temperature: 0.3,
+        },
+      }),
     },
-    body: JSON.stringify({
-      model,
-      max_tokens: 8192,
-      temperature: 0.3,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    }),
-  });
+  );
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`OpenRouter ${res.status}: ${err}`);
+    throw new Error(`Gemini ${res.status}: ${err}`);
   }
 
-  const data = await res.json() as OpenRouterResponse;
-  const content = data.choices[0]?.message?.content ?? "";
-  return { content, usage: data.usage, model: data.model ?? model };
+  const data = await res.json() as GeminiResponse;
+  const content = data.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text ?? "")
+    .join("")
+    .trim();
+
+  if (!content) {
+    const blockReason = data.promptFeedback?.blockReason;
+    throw new Error(
+      `Gemini response did not include generated text${blockReason ? ` (${blockReason})` : ""}`,
+    );
+  }
+
+  return {
+    content,
+    usage: {
+      prompt_tokens: data.usageMetadata?.promptTokenCount,
+      completion_tokens: data.usageMetadata?.candidatesTokenCount,
+      total_tokens: data.usageMetadata?.totalTokenCount,
+    },
+    model: data.modelVersion ?? model,
+  };
 }
 
 function validateOutput(content: string): boolean {
@@ -65,7 +99,7 @@ function validateOutput(content: string): boolean {
 async function generateWithRetry(
   systemPrompt: string,
   userPrompt: string,
-): Promise<{ content: string; usage: OpenRouterResponse["usage"]; model: string; retryCount: number }> {
+): Promise<{ content: string; usage: GenerationUsage; model: string; retryCount: number }> {
   let lastError: Error | null = null;
   let retryCount = 0;
 
@@ -87,7 +121,7 @@ async function generateWithRetry(
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 90_000);
 
-      const result = await callOpenRouter(systemPrompt, userPrompt, attempt.model, controller.signal);
+      const result = await callGemini(systemPrompt, userPrompt, attempt.model, controller.signal);
       clearTimeout(timeout);
 
       if (!validateOutput(result.content)) {
